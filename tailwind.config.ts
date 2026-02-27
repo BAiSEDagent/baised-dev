@@ -35,6 +35,7 @@ const config: Config = {
       },
       maxWidth: {
         content: '768px',
+        deck: '1100px',
       },
       fontFamily: {
         sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
