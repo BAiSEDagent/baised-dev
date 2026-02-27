@@ -1,9 +1,12 @@
 import { fetchBaseChainData } from '@/lib/base-intel';
+import { prisma } from '@/lib/db';
 import Image from 'next/image';
+
+export const revalidate = 30;
 
 interface IntelItem {
   id: string;
-  timestamp: string;
+  timestamp: Date;
   blockHeight: number;
   intelPayload: { type?: string; title?: string; body?: string };
   category: string;
@@ -11,17 +14,18 @@ interface IntelItem {
 
 async function fetchIntelFeed(): Promise<IntelItem[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/intel`, { next: { revalidate: 30 } });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.intel || [];
+    const posts = await prisma.intelPost.findMany({
+      where: { status: 'published' },
+      orderBy: { timestamp: 'desc' },
+      take: 20,
+    });
+    return posts as unknown as IntelItem[];
   } catch {
     return [];
   }
 }
 
-function timeAgo(timestamp: string): string {
+function timeAgo(timestamp: Date | string): string {
   const diff = Date.now() - new Date(timestamp).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'JUST NOW';
