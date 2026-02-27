@@ -120,6 +120,14 @@ export default async function CommandDeck() {
                       <span className="text-[#ededed]">{chainData.tvl}</span>
                     </p>
                     <p>
+                      <span className="text-[#787878]">DEX_VOL_24H:</span>{" "}
+                      <span className="text-[#ededed]">{chainData.dexVolume24h}</span>
+                    </p>
+                    <p>
+                      <span className="text-[#787878]">FEES_24H:</span>{" "}
+                      <span className="text-[#ededed]">{chainData.fees24h}</span>
+                    </p>
+                    <p>
                       <span className="text-[#787878]">BLOCK:</span>{" "}
                       <span className="text-[#0052FF] font-bold">
                         {formatBlock(chainData.latestBlock)}

@@ -1,17 +1,21 @@
 interface ChainData {
   latestBlock: number | string;
   status: string;
-  tvl: string; // Formatted, e.g. "$3.9B"
+  tvl: string;
+  dexVolume24h: string;
+  fees24h: string;
 }
 
 /**
- * Fetch Base chain telemetry: latest block (RPC) + TVL (DeFiLlama).
- * Both calls are independent — failures degrade gracefully.
+ * Fetch Base chain telemetry: block (RPC) + TVL + DEX volume + fees (DeFiLlama).
+ * All calls independent — failures degrade gracefully per field.
  */
 export async function fetchBaseChainData(): Promise<ChainData> {
-  const [blockResult, tvlResult] = await Promise.allSettled([
+  const [blockResult, tvlResult, dexResult, feesResult] = await Promise.allSettled([
     fetchLatestBlock(),
     fetchBaseTVL(),
+    fetchBaseDexVolume(),
+    fetchBaseFees(),
   ]);
 
   const block =
@@ -19,10 +23,11 @@ export async function fetchBaseChainData(): Promise<ChainData> {
       ? blockResult.value
       : { latestBlock: "OFFLINE" as const, status: "DATA_UNAVAILABLE" };
 
-  const tvl =
-    tvlResult.status === "fulfilled" ? tvlResult.value : "$—";
+  const tvl = tvlResult.status === "fulfilled" ? tvlResult.value : "$—";
+  const dexVolume24h = dexResult.status === "fulfilled" ? dexResult.value : "$—";
+  const fees24h = feesResult.status === "fulfilled" ? feesResult.value : "$—";
 
-  return { ...block, tvl };
+  return { ...block, tvl, dexVolume24h, fees24h };
 }
 
 async function fetchLatestBlock(): Promise<{
@@ -66,7 +71,34 @@ async function fetchBaseTVL(): Promise<string> {
 
   // Format: $3.9B, $12.4B, $850M
   const tvl = base.tvl;
-  if (tvl >= 1e9) return `$${(tvl / 1e9).toFixed(1)}B`;
-  if (tvl >= 1e6) return `$${(tvl / 1e6).toFixed(0)}M`;
-  return `$${tvl.toLocaleString()}`;
+  return formatUSD(tvl);
+}
+
+async function fetchBaseDexVolume(): Promise<string> {
+  const res = await fetch("https://api.llama.fi/overview/dexs/Base", {
+    next: { revalidate: 300 },
+  });
+  if (!res.ok) return "$—";
+  const data = await res.json();
+  const vol = data?.total24h;
+  if (typeof vol !== "number") return "$—";
+  return formatUSD(vol);
+}
+
+async function fetchBaseFees(): Promise<string> {
+  const res = await fetch("https://api.llama.fi/overview/fees/Base", {
+    next: { revalidate: 300 },
+  });
+  if (!res.ok) return "$—";
+  const data = await res.json();
+  const fees = data?.total24h;
+  if (typeof fees !== "number") return "$—";
+  return formatUSD(fees);
+}
+
+function formatUSD(value: number): string {
+  if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
+  if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+  if (value >= 1e3) return `$${(value / 1e3).toFixed(0)}K`;
+  return `$${value.toLocaleString()}`;
 }
