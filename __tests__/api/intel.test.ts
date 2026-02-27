@@ -10,6 +10,18 @@ vi.mock('next/headers', () => ({
   }),
 }));
 
+// Mock x402
+vi.mock('@/lib/x402', () => ({
+  verifyPayment: vi.fn(),
+  paymentRequiredHeaders: vi.fn(() => ({
+    'X-Payment-Address': '0xBA15EDb15edB15eDb15EDb15edB15EDb15edB15E',
+    'X-Payment-Amount': '10000',
+    'X-Payment-Asset': 'eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    'X-Payment-Network': 'base',
+    'X-Payment-Decimals': '6',
+  })),
+}));
+
 // Mock prisma
 const mockCreate = vi.fn().mockResolvedValue({ id: 'test-id-001' });
 const mockFindMany = vi.fn().mockResolvedValue([
@@ -31,6 +43,10 @@ vi.mock('@/lib/db', () => ({
     intelPost: {
       create: (...args: unknown[]) => mockCreate(...args),
       findMany: (...args: unknown[]) => mockFindMany(...args),
+    },
+    paymentLedger: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({ id: 'ledger-1' }),
     },
   },
 }));
@@ -131,13 +147,13 @@ describe('/api/intel', () => {
     expect(data.id).toBe('test-id-001');
   });
 
-  it('GET returns intel posts with CORS headers', async () => {
+  it('GET returns 402 Payment Required without X-Payment-TxHash', async () => {
     const { GET } = await import('@/app/api/intel/route');
-    const res = await GET();
-    expect(res.status).toBe(200);
+    const req = new Request('http://localhost:3000/api/intel', { method: 'GET' });
+    const res = await GET(req);
+    expect(res.status).toBe(402);
     const data = await res.json();
-    expect(data.count).toBe(1);
-    expect(data.intel).toHaveLength(1);
-    expect(res.headers.get('access-control-allow-origin')).toBe('*');
+    expect(data.error).toBe('Payment Required');
+    expect(res.headers.get('X-Payment-Address')).toBeTruthy();
   });
 });

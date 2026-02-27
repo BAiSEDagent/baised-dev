@@ -142,15 +142,69 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
-  const db = await getDb();
-  if (!db) {
+export async function GET(req: Request) {
+  const txHash = req.headers.get('X-Payment-TxHash');
+
+  // No payment header → 402 challenge
+  if (!txHash) {
+    // SECURITY: Lazy import to avoid loading viem when not needed
+    const { paymentRequiredHeaders } = await import('@/lib/x402');
     return NextResponse.json(
-      { count: 0, intel: [] },
-      { headers: corsHeaders('GET') }
+      {
+        error: 'Payment Required',
+        message: 'Send USDC on Base to access intel. Include tx hash in X-Payment-TxHash header.',
+      },
+      {
+        status: 402,
+        headers: { ...corsHeaders('GET'), ...paymentRequiredHeaders() },
+      }
     );
   }
 
+  // Validate tx hash format
+  if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
+    return NextResponse.json(
+      { error: 'Invalid tx hash format' },
+      { status: 400, headers: corsHeaders('GET') }
+    );
+  }
+
+  const db = await getDb();
+  if (!db) {
+    return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+  }
+
+  // SECURITY: Check replay — has this tx already been used?
+  const existing = await db.paymentLedger.findUnique({ where: { txHash } });
+  if (existing) {
+    return NextResponse.json(
+      { error: 'Payment already used', txHash },
+      { status: 409, headers: corsHeaders('GET') }
+    );
+  }
+
+  // Verify payment onchain via Viem
+  const { verifyPayment } = await import('@/lib/x402');
+  const verification = await verifyPayment(txHash as `0x${string}`);
+
+  if (!verification.valid) {
+    return NextResponse.json(
+      { error: 'Payment verification failed', detail: verification.error },
+      { status: 402, headers: corsHeaders('GET') }
+    );
+  }
+
+  // Record payment in ledger (replay protection)
+  await db.paymentLedger.create({
+    data: {
+      txHash,
+      payer: verification.payer,
+      amount: verification.amount,
+      blockNumber: verification.blockNumber,
+    },
+  });
+
+  // Return gated intel
   try {
     const posts = await db.intelPost.findMany({
       where: { status: 'published' },
@@ -159,7 +213,7 @@ export async function GET() {
     });
 
     return NextResponse.json(
-      { count: posts.length, intel: posts },
+      { count: posts.length, intel: posts, payment: { txHash, payer: verification.payer } },
       { headers: corsHeaders('GET') }
     );
   } catch (error) {
