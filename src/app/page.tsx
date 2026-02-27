@@ -117,7 +117,7 @@ export default async function CommandDeck() {
                     </p>
                     <p>
                       <span className="text-[#787878]">BASE_TVL:</span>{" "}
-                      <span className="text-[#ededed]">$—B</span>
+                      <span className="text-[#ededed]">{chainData.tvl}</span>
                     </p>
                     <p>
                       <span className="text-[#787878]">BLOCK:</span>{" "}
