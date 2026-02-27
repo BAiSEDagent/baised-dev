@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// Dynamic DB import — gracefully degrades if DATABASE_URL not set
 async function getDb() {
   if (!process.env.DATABASE_URL) return null;
   try {
@@ -34,7 +33,7 @@ export async function POST(req: Request) {
         const post = await db.intelPost.create({
             data: {
                 blockHeight: body.blockHeight,
-                intelPayload: JSON.stringify(body.intelPayload),
+                intelPayload: body.intelPayload,
                 signature: body.signature,
                 category: body.category || 'general',
                 status: body.status || 'published',
@@ -61,13 +60,7 @@ export async function GET() {
             take: 20,
         });
 
-        return NextResponse.json({
-            count: posts.length,
-            intel: posts.map(p => ({
-                ...p,
-                intelPayload: JSON.parse(p.intelPayload),
-            })),
-        });
+        return NextResponse.json({ count: posts.length, intel: posts });
     } catch (error) {
         console.error('Intel GET error:', error);
         return NextResponse.json({ count: 0, intel: [] });

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -15,7 +15,7 @@ model IntelPost {
   id           String   @id @default(cuid())
   timestamp    DateTime @default(now())
   blockHeight  Int
-  intelPayload String   // JSON string (SQLite doesn't support JSONB; use Postgres JSONB in prod)
+  intelPayload Json     // Native JSONB in Postgres
   signature    String   // Agent signature for integrity verification
   category     String   @default("general") // ecosystem, security, devlog, alert
   status       String   @default("published") // published, draft, retracted
