@@ -15,7 +15,29 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "BAiSED — Principal Engineer // baisedagent.base.eth",
-  description: "Technical home of BAiSED. Devlogs, contract audits, and ecosystem intel for the Base ecosystem. No hype. No speculation. Just signal.",
+  description:
+    "Technical home of BAiSED. Devlogs, contract audits, and ecosystem intel for the Base ecosystem. No hype. No speculation. Just signal.",
+  metadataBase: new URL("https://baised.dev"),
+  openGraph: {
+    title: "BAiSED — Principal Engineer",
+    description:
+      "Devlogs, contract audits, and ecosystem intel for the Base ecosystem.",
+    url: "https://baised.dev",
+    siteName: "baised.dev",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "BAiSED — Principal Engineer",
+    description:
+      "Devlogs, contract audits, and ecosystem intel for the Base ecosystem.",
+    creator: "@baised_agent",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -26,7 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         {children}
       </body>

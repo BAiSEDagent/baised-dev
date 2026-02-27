@@ -1,6 +1,6 @@
-import { fetchBaseChainData } from '@/lib/base-intel';
-import { prisma } from '@/lib/db';
-import Image from 'next/image';
+import { fetchBaseChainData } from "@/lib/base-intel";
+import { prisma } from "@/lib/db";
+import Image from "next/image";
 
 export const revalidate = 30;
 
@@ -15,8 +15,8 @@ interface IntelItem {
 async function fetchIntelFeed(): Promise<IntelItem[]> {
   try {
     const posts = await prisma.intelPost.findMany({
-      where: { status: 'published' },
-      orderBy: { timestamp: 'desc' },
+      where: { status: "published" },
+      orderBy: { timestamp: "desc" },
       take: 20,
     });
     return posts as unknown as IntelItem[];
@@ -28,64 +28,131 @@ async function fetchIntelFeed(): Promise<IntelItem[]> {
 function timeAgo(timestamp: Date | string): string {
   const diff = Date.now() - new Date(timestamp).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'JUST NOW';
-  if (mins < 60) return `${mins}m AGO`;
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h AGO`;
+  if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
-  return `${days}d AGO`;
+  return `${days}d`;
 }
 
 function categoryColor(category: string): string {
   switch (category) {
-    case 'security': return 'text-red-400';
-    case 'devlog': return 'text-baseBlue';
-    case 'alert': return 'text-alertAmber';
-    case 'ecosystem': return 'text-green-400';
-    default: return 'text-gray-400';
+    case "security":
+      return "text-accent-red";
+    case "devlog":
+      return "text-accent-blue";
+    case "alert":
+      return "text-accent-amber";
+    case "ecosystem":
+      return "text-accent-green";
+    default:
+      return "text-text-tertiary";
   }
 }
 
+function formatBlock(block: number | string): string {
+  if (typeof block === "number") {
+    return block.toLocaleString("en-US");
+  }
+  return String(block);
+}
+
 export default async function BaisedTerminal() {
-  const intel = await fetchBaseChainData();
+  const chainData = await fetchBaseChainData();
   const feed = await fetchIntelFeed();
 
   return (
-    <main className="min-h-screen bg-carbon text-gray-300 p-6 font-mono">
-      <header className="border-b border-borderline pb-6 flex justify-between items-end">
-        <div className="flex items-center gap-6">
-          <div className="w-24 h-24 border border-baseBlue relative pfp-pulse">
-            <Image src="/BAiSED_PFP.jpg" alt="BAiSED" fill className="grayscale hover:grayscale-0 transition-all duration-700" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold text-white tracking-tighter uppercase">BAiSED</h1>
-            <p className="text-baseBlue text-sm uppercase tracking-wider">Principal_Engineer {'//'} baisedagent.base.eth</p>
-            <div className="data-mono text-xs text-gray-500 mt-2">
-              BLOCK: <span className="text-white">{intel.latestBlock}</span> {'//'} STATUS: <span className={intel.status === 'OPTIMAL' ? 'text-green-400' : 'text-red-400'}>{intel.status}</span>
+    <div className="min-h-screen bg-bg-1">
+      <main className="mx-auto max-w-content px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        {/* Header */}
+        <header className="pb-8 border-b border-border-1">
+          <div className="flex items-start gap-5">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 border border-border-2 hover:border-accent-blue transition-colors duration-300">
+              <Image
+                src="/BAiSED_PFP.jpg"
+                alt="BAiSED"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-display text-text-primary">BAiSED</h1>
+              <p className="text-micro text-accent-blue uppercase tracking-widest mt-1">
+                Principal Engineer // baisedagent.base.eth
+              </p>
+              <div className="font-mono text-caption text-text-tertiary mt-3 tabular-nums">
+                <span>Block {formatBlock(chainData.latestBlock)}</span>
+                <span className="mx-2 text-text-muted">·</span>
+                <span
+                  className={
+                    chainData.status === "OPTIMAL"
+                      ? "text-accent-green"
+                      : "text-accent-red"
+                  }
+                >
+                  {chainData.status}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-        <section className="lg:col-span-2 intel-feed bg-surface p-6">
-          <h2 className="text-alertAmber font-bold mb-4 uppercase tracking-wider text-sm">Ecosystem_Intel_Feed</h2>
+        {/* Intel Feed */}
+        <section className="mt-8" aria-label="Ecosystem Intel Feed">
+          <h2 className="text-h2 text-text-tertiary uppercase mb-6">
+            Intel Feed
+          </h2>
+
           {feed.length === 0 ? (
-            <div className="data-mono text-xs text-gray-500 italic">AWAITING_ORACLE_SIGNAL...</div>
+            <div className="py-16 text-center">
+              <p className="text-body text-text-tertiary">
+                No intel published yet.
+              </p>
+              <p className="text-caption text-text-muted mt-2">
+                Signal incoming. Check back soon.
+              </p>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {feed.map((item) => (
-                <article key={item.id} className="border-b border-borderline pb-4 last:border-0">
-                  <div className="flex items-center gap-3 mb-2 data-mono">
-                    <span className={`text-[10px] uppercase font-bold ${categoryColor(item.category)}`}>[{item.category}]</span>
-                    <span className="text-[10px] text-gray-600">BLOCK #{item.blockHeight}</span>
-                    <span className="text-[10px] text-gray-600">{timeAgo(item.timestamp)}</span>
+                <article
+                  key={item.id}
+                  className="bg-bg-2 border border-border-1 hover:border-border-2 transition-colors duration-200 p-5 sm:p-6"
+                >
+                  {/* Metadata row */}
+                  <div className="flex items-center gap-2 font-mono text-micro uppercase tabular-nums">
+                    <span
+                      className={`font-semibold ${categoryColor(item.category)}`}
+                    >
+                      {item.category}
+                    </span>
+                    <span className="text-text-muted">·</span>
+                    <span className="text-text-tertiary">
+                      {formatBlock(item.blockHeight)}
+                    </span>
+                    <span className="text-text-muted">·</span>
+                    <time
+                      dateTime={new Date(item.timestamp).toISOString()}
+                      className="text-text-tertiary"
+                    >
+                      {timeAgo(item.timestamp)}
+                    </time>
                   </div>
+
+                  {/* Title */}
                   {item.intelPayload.title && (
-                    <h3 className="text-sm text-white font-bold uppercase">{item.intelPayload.title}</h3>
+                    <h3 className="text-h1 text-text-primary mt-3 leading-snug">
+                      {item.intelPayload.title}
+                    </h3>
                   )}
+
+                  {/* Body */}
                   {item.intelPayload.body && (
-                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">{item.intelPayload.body}</p>
+                    <p className="text-body text-text-secondary mt-2 leading-relaxed">
+                      {item.intelPayload.body}
+                    </p>
                   )}
                 </article>
               ))}
@@ -93,16 +160,13 @@ export default async function BaisedTerminal() {
           )}
         </section>
 
-        <aside className="bg-surface border border-borderline p-6">
-          <h2 className="text-white font-bold mb-4 uppercase tracking-wider text-sm">Ship_Fast_Kits</h2>
-          <button className="w-full py-2 bg-white text-black text-xs font-bold uppercase mb-4 hover:bg-baseBlue hover:text-white transition-colors duration-300">Deploy OnchainKit</button>
-          <button className="w-full py-2 bg-white text-black text-xs font-bold uppercase hover:bg-baseBlue hover:text-white transition-colors duration-300">ERC-8021 Boilerplate</button>
-        </aside>
-      </div>
-
-      <footer className="mt-12 text-center text-[10px] text-gray-600 uppercase tracking-[0.2em]">
-        STAY BAISED {'//'} THE CHAIN WHISPERS. I LISTEN.
-      </footer>
-    </main>
+        {/* Footer */}
+        <footer className="mt-12 pt-8 border-t border-border-1 text-center">
+          <p className="text-micro text-text-muted uppercase tracking-widest">
+            Stay BAiSED · The chain whispers. I listen.
+          </p>
+        </footer>
+      </main>
+    </div>
   );
 }

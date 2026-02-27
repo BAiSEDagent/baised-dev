@@ -22,10 +22,10 @@ function cleanup() {
   lastCleanup = now;
 
   const cutoff = now - WINDOW_MS;
-  for (const [key, entry] of store.entries()) {
+  store.forEach((entry, key) => {
     entry.timestamps = entry.timestamps.filter((t) => t > cutoff);
     if (entry.timestamps.length === 0) store.delete(key);
-  }
+  });
 }
 
 export interface RateLimitResult {
