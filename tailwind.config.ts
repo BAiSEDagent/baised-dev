@@ -9,9 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        carbon: '#050505',
+        surface: '#111111',
+        borderline: '#1A1A1A',
+        baseBlue: '#0052FF',
+        alertAmber: '#FFBF00',
       },
+      fontFamily: { mono: ['JetBrains Mono', 'monospace'] },
     },
   },
   plugins: [],
