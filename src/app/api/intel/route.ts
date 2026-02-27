@@ -1,16 +1,29 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+
+// Dynamic DB import — gracefully degrades if DATABASE_URL not set
+async function getDb() {
+  if (!process.env.DATABASE_URL) return null;
+  try {
+    const { prisma } = await import('@/lib/db');
+    return prisma;
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(req: Request) {
-    // SECURITY: Bearer token auth
     if (req.headers.get('Authorization') !== `Bearer ${process.env.BAISED_AGENT_SECRET}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const db = await getDb();
+    if (!db) {
+        return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
     }
 
     try {
         const body = await req.json();
 
-        // Validate required fields
         if (!body.blockHeight || !body.intelPayload || !body.signature) {
             return NextResponse.json(
                 { error: 'Missing required fields: blockHeight, intelPayload, signature' },
@@ -18,7 +31,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const post = await prisma.intelPost.create({
+        const post = await db.intelPost.create({
             data: {
                 blockHeight: body.blockHeight,
                 intelPayload: JSON.stringify(body.intelPayload),
@@ -36,8 +49,13 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
+    const db = await getDb();
+    if (!db) {
+        return NextResponse.json({ count: 0, intel: [] });
+    }
+
     try {
-        const posts = await prisma.intelPost.findMany({
+        const posts = await db.intelPost.findMany({
             where: { status: 'published' },
             orderBy: { timestamp: 'desc' },
             take: 20,
@@ -52,6 +70,6 @@ export async function GET() {
         });
     } catch (error) {
         console.error('Intel GET error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ count: 0, intel: [] });
     }
 }
