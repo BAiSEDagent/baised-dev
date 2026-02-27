@@ -124,6 +124,8 @@ export async function POST(req: Request) {
         signature: data.signature,
         category: data.category,
         status: 'published',
+        isPremium: data.isPremium,
+        priceUsdc: data.priceUsdc,
       },
     });
 

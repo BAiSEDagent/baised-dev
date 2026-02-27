@@ -19,6 +19,8 @@ model IntelPost {
   signature    String   // Agent signature for integrity verification
   category     String   @default("general") // ecosystem, security, devlog, alert
   status       String   @default("published") // published, draft, retracted
+  isPremium    Boolean  @default(false)
+  priceUsdc    String?  // e.g. "2.50" — null for free posts
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -12,6 +12,8 @@ export interface ValidatedIntel {
   intelPayload: { type?: string; title: string; body: string };
   signature: string;
   category: (typeof VALID_CATEGORIES)[number];
+  isPremium: boolean;
+  priceUsdc: string | null;
 }
 
 export interface ValidationError {
@@ -72,8 +74,27 @@ export function validateIntelPayload(
     }
   }
 
+  // isPremium: optional boolean
+  const premium = parsed.isPremium;
+  if (premium !== undefined && typeof premium !== 'boolean') {
+    errors.push({ field: 'isPremium', message: 'Must be a boolean' });
+  }
+
+  // priceUsdc: optional string, required if isPremium is true
+  const price = parsed.priceUsdc;
+  if (price !== undefined && price !== null) {
+    if (typeof price !== 'string' || !/^\d+(\.\d{1,2})?$/.test(price)) {
+      errors.push({ field: 'priceUsdc', message: 'Must be a decimal string (e.g. "2.50")' });
+    } else if (parseFloat(price) <= 0 || parseFloat(price) > 1000) {
+      errors.push({ field: 'priceUsdc', message: 'Must be between 0.01 and 1000' });
+    }
+  }
+  if (premium === true && (!price || typeof price !== 'string')) {
+    errors.push({ field: 'priceUsdc', message: 'Required when isPremium is true' });
+  }
+
   // SECURITY: Reject unknown top-level fields
-  const allowedFields = new Set(['blockHeight', 'intelPayload', 'signature', 'category', 'status']);
+  const allowedFields = new Set(['blockHeight', 'intelPayload', 'signature', 'category', 'status', 'isPremium', 'priceUsdc']);
   for (const key of Object.keys(parsed)) {
     if (!allowedFields.has(key)) {
       errors.push({ field: key, message: 'Unknown field — rejected' });
@@ -88,6 +109,8 @@ export function validateIntelPayload(
       intelPayload: ip as { type?: string; title: string; body: string },
       signature: sig as string,
       category: ((cat as string) || 'general') as ValidatedIntel['category'],
+      isPremium: (premium as boolean) || false,
+      priceUsdc: (typeof price === 'string' ? price : null),
     },
   };
 }
