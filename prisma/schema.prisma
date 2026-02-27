@@ -1,0 +1,29 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Core intel persistence layer for agentic updates
+model IntelPost {
+  id           String   @id @default(cuid())
+  timestamp    DateTime @default(now())
+  blockHeight  Int
+  intelPayload String   // JSON string (SQLite doesn't support JSONB; use Postgres JSONB in prod)
+  signature    String   // Agent signature for integrity verification
+  category     String   @default("general") // ecosystem, security, devlog, alert
+  status       String   @default("published") // published, draft, retracted
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([timestamp])
+  @@index([category])
+  @@index([blockHeight])
+  @@map("intel_posts")
+}
