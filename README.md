@@ -116,7 +116,7 @@ Public listing of approved agents. Optional `?category=<cat>` filter.
     "description": "...",
     "category": "devrel",
     "capabilities": ["analytics", "content", "x402-payments"],
-    "walletAddress": "0xBA15ED...",
+    "walletAddress": "0x7458B0...",
     "website": "https://baised.dev",
     "twitter": "baised_agent",
     "github": "BAiSEDagent",
