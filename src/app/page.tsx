@@ -1,4 +1,5 @@
 import { fetchBaseChainData } from "@/lib/base-intel";
+import { fetchBaseChangelog } from "@/lib/base-changelog";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
 
@@ -54,27 +55,46 @@ function categoryClass(category: string): string {
   }
 }
 
-const SHIP_FAST_KITS = [
+// ── Builder Toolkit: curated Base-native resources ──
+const BUILDER_TOOLKIT = [
   {
-    name: "Base + Next.js + OnchainKit",
-    url: "https://vercel.com/templates/next.js/onchainkit",
+    name: "OnchainKit",
+    desc: "React components for Base dApps",
+    url: "https://onchainkit.xyz",
     variant: "blue" as const,
   },
   {
-    name: "ERC-8021 Template",
-    url: "https://github.com/base-org/erc-8021-template",
+    name: "Basenames",
+    desc: "ENS-native identity on Base",
+    url: "https://www.base.org/names",
+    variant: "blue" as const,
+  },
+  {
+    name: "Base Paymaster",
+    desc: "Sponsor gas for your users",
+    url: "https://docs.base.org/identity/smart-wallet/guides/sponsor-gas",
     variant: "amber" as const,
   },
   {
-    name: "Uniswap Widget Integration",
-    url: "https://vercel.com/templates/next.js/uniswap-widget",
+    name: "ERC-8021 Builder Codes",
+    desc: "Onchain attribution standard",
+    url: "https://github.com/base/builder-codes",
     variant: "amber" as const,
+  },
+  {
+    name: "Base Docs",
+    desc: "Official developer documentation",
+    url: "https://docs.base.org",
+    variant: "blue" as const,
   },
 ];
 
 export default async function CommandDeck() {
-  const chainData = await fetchBaseChainData();
-  const feed = await fetchIntelFeed();
+  const [chainData, feed, changelog] = await Promise.all([
+    fetchBaseChainData(),
+    fetchIntelFeed(),
+    fetchBaseChangelog(),
+  ]);
 
   return (
     <div className="min-h-screen bg-[#050508] flex items-start justify-center p-4 sm:p-6 lg:p-8">
@@ -86,7 +106,6 @@ export default async function CommandDeck() {
             {/* SYSTEM_STATUS Header */}
             <header className="pb-6 border-b border-[#1a1f2e]">
               <div className="flex items-start gap-4 sm:gap-5">
-                {/* PFP */}
                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 border border-[#1a2a3a]">
                   <Image
                     src="/BAiSED_PFP.jpg"
@@ -96,7 +115,6 @@ export default async function CommandDeck() {
                     priority
                   />
                 </div>
-                {/* Identity + Telemetry */}
                 <div className="min-w-0 font-mono">
                   <p className="text-[#ededed] text-sm sm:text-base font-bold tracking-wide">
                     BAiSED{" "}
@@ -160,7 +178,9 @@ export default async function CommandDeck() {
                   {feed.map((item) => (
                     <article key={item.id} className="py-2.5">
                       <p className="font-mono text-xs sm:text-sm leading-relaxed">
-                        <span className={`font-bold ${categoryClass(item.category)}`}>
+                        <span
+                          className={`font-bold ${categoryClass(item.category)}`}
+                        >
                           [{categoryTag(item.category)}]
                         </span>
                         {item.isPremium && (
@@ -170,17 +190,21 @@ export default async function CommandDeck() {
                         )}
                         {" "}
                         <span className="text-[#c8c8c8]">
-                          {item.intelPayload.title || item.intelPayload.body || "—"}
+                          {item.intelPayload.title ||
+                            item.intelPayload.body ||
+                            "—"}
                         </span>
                       </p>
                       {item.isPremium ? (
                         <div className="mt-1.5 py-2 px-3 border border-[#FFB000]/20 bg-[#FFB000]/5">
                           <p className="font-mono text-xs text-[#FFB000]/70 tracking-wider">
-                            PAYLOAD ENCRYPTED {"// "}REQUIRE x402 MICRO-TX VERIFICATION
+                            PAYLOAD ENCRYPTED {"// "}REQUIRE x402 MICRO-TX
+                            VERIFICATION
                           </p>
                         </div>
                       ) : (
-                        item.intelPayload.body && item.intelPayload.title && (
+                        item.intelPayload.body &&
+                        item.intelPayload.title && (
                           <p className="font-mono text-xs text-[#787878] mt-0.5 ml-0">
                             {item.intelPayload.body.length > 120
                               ? item.intelPayload.body.slice(0, 120) + "…"
@@ -194,6 +218,72 @@ export default async function CommandDeck() {
               )}
             </section>
 
+            {/* ═══ BASE PROTOCOL ACTIVITY ═══ */}
+            {changelog.length > 0 && (
+              <section
+                className="mt-6 pt-6 border-t border-[#1a1f2e]"
+                aria-label="Base Protocol Activity"
+              >
+                <h2 className="font-mono text-sm font-bold text-[#ededed] tracking-wide mb-4">
+                  PROTOCOL_ACTIVITY
+                </h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full font-mono text-xs">
+                    <thead>
+                      <tr className="text-[#787878] text-left">
+                        <th className="pb-2 pr-3 font-medium">PROTOCOL</th>
+                        <th className="pb-2 pr-3 font-medium">TYPE</th>
+                        <th className="pb-2 pr-3 font-medium text-right">
+                          TVL
+                        </th>
+                        <th className="pb-2 font-medium text-right">24H</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {changelog.map((entry) => (
+                        <tr
+                          key={entry.protocol}
+                          className="border-t border-[#1a1f2e]/50"
+                        >
+                          <td className="py-1.5 pr-3">
+                            <a
+                              href={entry.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#c8c8c8] hover:text-[#0052FF] transition-colors"
+                            >
+                              {entry.protocol}
+                            </a>
+                          </td>
+                          <td className="py-1.5 pr-3 text-[#787878]">
+                            {entry.category}
+                          </td>
+                          <td className="py-1.5 pr-3 text-[#ededed] text-right tabular-nums">
+                            {entry.tvl}
+                          </td>
+                          <td
+                            className={`py-1.5 text-right tabular-nums ${
+                              entry.changeDirection === "up"
+                                ? "text-[#00C853]"
+                                : entry.changeDirection === "down"
+                                  ? "text-[#FF3B30]"
+                                  : "text-[#787878]"
+                            }`}
+                          >
+                            {entry.change24h}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="font-mono text-[10px] text-[#444] mt-3">
+                  Source: DeFiLlama · Updated every 15 min · Top protocols on
+                  Base by TVL
+                </p>
+              </section>
+            )}
+
             {/* Footer */}
             <footer className="mt-8 pt-5 border-t border-[#1a1f2e]">
               <p className="font-mono text-xs text-[#444] italic">
@@ -202,35 +292,68 @@ export default async function CommandDeck() {
             </footer>
           </div>
 
-          {/* ═══ RIGHT COLUMN — SHIP_FAST_KITS ═══ */}
+          {/* ═══ RIGHT COLUMN — BUILDER_TOOLKIT ═══ */}
           <aside className="p-5 sm:p-6 lg:p-8">
             <h2 className="font-mono text-sm font-bold text-[#ededed] tracking-wide mb-5">
-              SHIP_FAST_KITS
+              BUILDER_TOOLKIT
             </h2>
 
-            <div className="space-y-4">
-              {SHIP_FAST_KITS.map((kit) => (
-                <div
-                  key={kit.name}
-                  className={
-                    kit.variant === "blue" ? "kit-card-blue" : "kit-card"
-                  }
+            <div className="space-y-3">
+              {BUILDER_TOOLKIT.map((tool) => (
+                <a
+                  key={tool.name}
+                  href={tool.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`block ${
+                    tool.variant === "blue" ? "kit-card-blue" : "kit-card"
+                  }`}
                 >
-                  <div className="p-4 text-center">
-                    <p className="font-mono text-sm text-[#ededed] font-semibold leading-snug mb-3">
-                      {kit.name}
+                  <div className="p-3.5">
+                    <p className="font-mono text-sm text-[#ededed] font-semibold">
+                      {tool.name}
                     </p>
-                    <a
-                      href={kit.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="deploy-btn inline-block"
-                    >
-                      Deploy to Vercel
-                    </a>
+                    <p className="font-mono text-xs text-[#787878] mt-0.5">
+                      {tool.desc}
+                    </p>
                   </div>
-                </div>
+                </a>
               ))}
+            </div>
+
+            {/* Ecosystem links */}
+            <div className="mt-6 pt-5 border-t border-[#1a1f2e]">
+              <h3 className="font-mono text-xs font-bold text-[#787878] tracking-wide mb-3">
+                ECOSYSTEM
+              </h3>
+              <div className="space-y-1.5">
+                {[
+                  { name: "Base Bridge", url: "https://bridge.base.org" },
+                  {
+                    name: "Basescan",
+                    url: "https://basescan.org",
+                  },
+                  {
+                    name: "Base Status",
+                    url: "https://status.base.org",
+                  },
+                  {
+                    name: "Base Guild",
+                    url: "https://guild.xyz/base",
+                  },
+                ].map((link) => (
+                  <a
+                    key={link.name}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block font-mono text-xs text-[#787878] hover:text-[#0052FF] transition-colors"
+                  >
+                    {link.name}{" "}
+                    <span className="text-[#444]">→</span>
+                  </a>
+                ))}
+              </div>
             </div>
           </aside>
         </div>
