@@ -4,6 +4,9 @@ import { fetchBaseStatus } from "@/lib/base-status";
 import { fetchBaseBlog } from "@/lib/base-blog";
 import { getBaseGrants } from "@/lib/grants";
 import { Sparkline } from "@/components/sparkline";
+import { OnchainKitBuilder } from "@/components/onchainkit-builder";
+import { BasenameResolver } from "@/components/basename-resolver";
+import { GasEstimator } from "@/components/gas-estimator";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
 import Link from "next/link";
@@ -58,39 +61,6 @@ function categoryClass(category: string): string {
   }
 }
 
-// ── Builder Toolkit: curated Base-native resources ──
-const BUILDER_TOOLKIT = [
-  {
-    name: "OnchainKit",
-    desc: "React components for Base dApps",
-    url: "https://onchainkit.xyz",
-    variant: "blue" as const,
-  },
-  {
-    name: "Basenames",
-    desc: "ENS-native identity on Base",
-    url: "https://www.base.org/names",
-    variant: "blue" as const,
-  },
-  {
-    name: "Base Paymaster",
-    desc: "Sponsor gas for your users",
-    url: "https://docs.base.org/base-account/guides/sponsor-gas",
-    variant: "amber" as const,
-  },
-  {
-    name: "ERC-8021 Builder Codes",
-    desc: "Onchain attribution standard",
-    url: "https://github.com/base/builder-codes",
-    variant: "amber" as const,
-  },
-  {
-    name: "Base Docs",
-    desc: "Official developer documentation",
-    url: "https://docs.base.org",
-    variant: "blue" as const,
-  },
-];
 
 export default async function CommandDeck() {
   const [chainData, feed, changelog, networkStatus, blogPosts] = await Promise.all([
@@ -346,33 +316,20 @@ export default async function CommandDeck() {
             </footer>
           </div>
 
-          {/* ═══ RIGHT COLUMN — BUILDER_TOOLKIT ═══ */}
+          {/* ═══ RIGHT COLUMN — INTERACTIVE WORKBENCH ═══ */}
           <aside className="p-5 sm:p-6 lg:p-8">
-            <h2 className="font-mono text-sm font-bold text-[#ededed] tracking-wide mb-5">
-              BUILDER_TOOLKIT
+            <h2 className="font-mono text-sm font-bold text-[#ededed] tracking-wide mb-3">
+              INTERACTIVE_WORKBENCH
             </h2>
+            <p className="font-mono text-xs text-[#787878] mb-5">
+              All intel 100% free. x402 for optional Oracle Tips.
+            </p>
 
-            <div className="space-y-3">
-              {BUILDER_TOOLKIT.map((tool) => (
-                <a
-                  key={tool.name}
-                  href={tool.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`block ${
-                    tool.variant === "blue" ? "kit-card-blue" : "kit-card"
-                  }`}
-                >
-                  <div className="p-3.5">
-                    <p className="font-mono text-sm text-[#ededed] font-semibold">
-                      {tool.name}
-                    </p>
-                    <p className="font-mono text-xs text-[#787878] mt-0.5">
-                      {tool.desc}
-                    </p>
-                  </div>
-                </a>
-              ))}
+            {/* Interactive Modules */}
+            <div className="space-y-5">
+              <OnchainKitBuilder />
+              <BasenameResolver />
+              <GasEstimator />
             </div>
 
             {/* Base Engineering Blog */}

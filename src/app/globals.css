@@ -90,3 +90,20 @@ body {
 ::-webkit-scrollbar-track { background: #0a0a0a; }
 ::-webkit-scrollbar-thumb { background: #262626; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #333; }
+
+/* Interactive Workbench Module */
+.workbench-module {
+  padding: 1rem;
+  border: 1px solid #1a2a3a;
+  background: linear-gradient(180deg, #0a0c12 0%, #080a0f 100%);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.workbench-module:hover {
+  border-color: rgba(0, 82, 255, 0.4);
+  box-shadow: 0 0 15px rgba(0, 82, 255, 0.05);
+}
+
+/* Code block styling */
+.code-block {
+  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+}
