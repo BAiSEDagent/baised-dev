@@ -140,7 +140,7 @@
               </a>
             </td>
             <td>
-              <xsl:value-of select="concat(substring(sitemap:lastmod, 0, 11))"/>
+              <xsl:value-of select="substring(sitemap:lastmod, 1, 10)"/>
             </td>
             <td>
               <xsl:value-of select="sitemap:priority"/>
