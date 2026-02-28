@@ -1,6 +1,7 @@
 import { fetchBaseChainData } from "@/lib/base-intel";
 import { fetchBaseChangelog } from "@/lib/base-changelog";
 import { fetchBaseStatus } from "@/lib/base-status";
+import { fetchBaseBlog } from "@/lib/base-blog";
 import { Sparkline } from "@/components/sparkline";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
@@ -93,11 +94,12 @@ const BUILDER_TOOLKIT = [
 ];
 
 export default async function CommandDeck() {
-  const [chainData, feed, changelog, networkStatus] = await Promise.all([
+  const [chainData, feed, changelog, networkStatus, blogPosts] = await Promise.all([
     fetchBaseChainData(),
     fetchIntelFeed(),
     fetchBaseChangelog(),
     fetchBaseStatus(),
+    fetchBaseBlog(4),
   ]);
 
   return (
@@ -356,6 +358,46 @@ export default async function CommandDeck() {
                 </a>
               ))}
             </div>
+
+            {/* Base Engineering Blog */}
+            {blogPosts.length > 0 && (
+              <div className="mt-6 pt-5 border-t border-[#1a1f2e]">
+                <h3 className="font-mono text-xs font-bold text-[#787878] tracking-wide mb-3">
+                  BASE_ENGINEERING
+                </h3>
+                <div className="space-y-2.5">
+                  {blogPosts.map((post) => (
+                    <a
+                      key={post.url}
+                      href={post.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block group"
+                    >
+                      <p className="font-mono text-xs text-[#c8c8c8] group-hover:text-[#0052FF] transition-colors leading-snug">
+                        {post.title}
+                      </p>
+                      {post.description && (
+                        <p className="font-mono text-[10px] text-[#555] mt-0.5 leading-snug">
+                          {post.description}
+                        </p>
+                      )}
+                      <p className="font-mono text-[10px] text-[#444] mt-0.5">
+                        {post.date}
+                      </p>
+                    </a>
+                  ))}
+                </div>
+                <a
+                  href="https://blog.base.dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block font-mono text-[10px] text-[#0052FF] hover:text-[#3380FF] mt-3 transition-colors"
+                >
+                  All posts →
+                </a>
+              </div>
+            )}
 
             {/* Ecosystem links */}
             <div className="mt-6 pt-5 border-t border-[#1a1f2e]">
