@@ -4,6 +4,8 @@ interface ChainData {
   tvl: string;
   dexVolume24h: string;
   fees24h: string;
+  gasPrice: string;
+  gasPriceGwei: number | null;
 }
 
 /**
@@ -11,11 +13,12 @@ interface ChainData {
  * All calls independent — failures degrade gracefully per field.
  */
 export async function fetchBaseChainData(): Promise<ChainData> {
-  const [blockResult, tvlResult, dexResult, feesResult] = await Promise.allSettled([
+  const [blockResult, tvlResult, dexResult, feesResult, gasResult] = await Promise.allSettled([
     fetchLatestBlock(),
     fetchBaseTVL(),
     fetchBaseDexVolume(),
     fetchBaseFees(),
+    fetchGasPrice(),
   ]);
 
   const block =
@@ -26,8 +29,9 @@ export async function fetchBaseChainData(): Promise<ChainData> {
   const tvl = tvlResult.status === "fulfilled" ? tvlResult.value : "$—";
   const dexVolume24h = dexResult.status === "fulfilled" ? dexResult.value : "$—";
   const fees24h = feesResult.status === "fulfilled" ? feesResult.value : "$—";
+  const gas = gasResult.status === "fulfilled" ? gasResult.value : { gasPrice: "—", gasPriceGwei: null };
 
-  return { ...block, tvl, dexVolume24h, fees24h };
+  return { ...block, tvl, dexVolume24h, fees24h, ...gas };
 }
 
 async function fetchLatestBlock(): Promise<{
@@ -110,6 +114,36 @@ async function fetchBaseFees(): Promise<string> {
   const fees = data?.total24h;
   if (typeof fees !== "number") return "$—";
   return formatUSD(fees);
+}
+
+async function fetchGasPrice(): Promise<{ gasPrice: string; gasPriceGwei: number | null }> {
+  const rpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
+  const res = await fetch(rpcUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      method: "eth_gasPrice",
+      params: [],
+      id: 2,
+    }),
+    next: { revalidate: 12 },
+  });
+
+  if (!res.ok) return { gasPrice: "—", gasPriceGwei: null };
+
+  const data = await res.json();
+  const wei = parseInt(data.result, 16);
+  const gwei = wei / 1e9;
+
+  // Base gas is typically sub-gwei, show in appropriate unit
+  if (gwei < 0.001) {
+    return { gasPrice: `${(wei / 1e6).toFixed(3)} Mwei`, gasPriceGwei: gwei };
+  }
+  if (gwei < 1) {
+    return { gasPrice: `${gwei.toFixed(4)} Gwei`, gasPriceGwei: gwei };
+  }
+  return { gasPrice: `${gwei.toFixed(2)} Gwei`, gasPriceGwei: gwei };
 }
 
 /**
