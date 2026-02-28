@@ -58,9 +58,9 @@ model Agent {
   github        String?
   cdpTools      String[] // e.g. ["agentkit", "server-wallet", "x402", "onchainkit"]
   builder       String?  // Team or individual name
-  logoUrl       String?
   status        String   @default("pending") // pending, approved, rejected
   featured      Boolean  @default(false)
+  submitterIp   String?  // For moderation/anti-spam tracking
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

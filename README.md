@@ -100,6 +100,81 @@ npm test -- --ui   # Vitest UI
 | `DATABASE_URL` | Neon Postgres connection string |
 | `BAISED_AGENT_SECRET` | API authentication secret |
 
+## Agent Directory API
+
+### GET /api/agents
+
+Public listing of approved agents. Optional `?category=<cat>` filter.
+
+**Response:**
+```json
+{
+  "count": 1,
+  "agents": [{
+    "id": "...",
+    "name": "BAiSED",
+    "description": "...",
+    "category": "devrel",
+    "capabilities": ["analytics", "content", "x402-payments"],
+    "walletAddress": "0xBA15ED...",
+    "website": "https://baised.dev",
+    "twitter": "baised_agent",
+    "github": "BAiSEDagent",
+    "cdpTools": ["onchainkit", "x402", "node-rpc"],
+    "builder": "Adam",
+    "featured": true
+  }]
+}
+```
+
+### POST /api/agents
+
+Submit a new agent for review. Rate limited (10/min/IP). All submissions pending until manually approved.
+
+**Request:**
+```json
+{
+  "name": "MyAgent",
+  "description": "AI agent that does X, Y, Z on Base",
+  "category": "trading",
+  "capabilities": ["swaps", "analytics"],
+  "cdpTools": ["agentkit", "node-rpc"],
+  "walletAddress": "0x...",
+  "website": "https://...",
+  "twitter": "handle",
+  "github": "username",
+  "builder": "Team Name"
+}
+```
+
+**Required fields:**
+- `name` (2-50 chars)
+- `description` (10-500 chars)
+- `category` (one of: `trading`, `defi`, `social`, `infrastructure`, `devrel`, `analytics`, `other`)
+- `capabilities` (1-10 items, each from predefined list — see validation)
+- `cdpTools` (array, each from: `agentkit`, `server-wallet`, `x402`, `onchainkit`, `node-rpc`, `sql-api`, `webhooks`, `token-balances`, `address-history`)
+
+**Optional fields:**
+- `walletAddress` (Base mainnet address, 0x + 40 hex chars)
+- `website` (HTTPS URL, max 200 chars)
+- `twitter` (handle, 1-15 chars, alphanumeric + underscore)
+- `github` (username, 1-39 chars)
+- `builder` (max 50 chars)
+
+**Response (201):**
+```json
+{
+  "message": "Agent submitted for review",
+  "id": "cm..."
+}
+```
+
+**Errors:**
+- `400` — Validation failed
+- `409` — Agent name already exists
+- `413` — Request too large (max 5KB)
+- `429` — Rate limited (10 requests/min/IP)
+
 ## License
 
 MIT

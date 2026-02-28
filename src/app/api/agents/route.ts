@@ -6,6 +6,21 @@ import { validateAgentSubmission } from '@/lib/agents';
 export const dynamic = 'force-dynamic';
 
 /**
+ * OPTIONS /api/agents
+ * CORS preflight for browser-based submissions.
+ */
+export async function OPTIONS() {
+  return NextResponse.json({}, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
+/**
  * GET /api/agents?category=<cat>
  * Public listing of approved agents.
  */
@@ -31,13 +46,15 @@ export async function GET(request: NextRequest) {
         github: true,
         cdpTools: true,
         builder: true,
-        logoUrl: true,
         featured: true,
       },
     });
 
     return NextResponse.json({ count: agents.length, agents }, {
-      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' },
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        'Access-Control-Allow-Origin': '*',
+      },
     });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch agents' }, { status: 500 });
@@ -105,12 +122,16 @@ export async function POST(request: NextRequest) {
         cdpTools: sanitized.cdpTools,
         builder: sanitized.builder || null,
         status: 'pending', // SECURITY: All submissions require manual approval
+        submitterIp: ip,
       },
     });
 
     return NextResponse.json(
       { message: 'Agent submitted for review', id: agent.id },
-      { status: 201 }
+      {
+        status: 201,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      }
     );
   } catch {
     return NextResponse.json({ error: 'Submission failed' }, { status: 500 });

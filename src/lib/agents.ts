@@ -14,7 +14,6 @@ export interface AgentListing {
   github: string | null;
   cdpTools: string[];
   builder: string | null;
-  logoUrl: string | null;
   featured: boolean;
 }
 
