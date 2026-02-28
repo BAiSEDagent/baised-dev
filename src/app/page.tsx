@@ -1,5 +1,6 @@
 import { fetchBaseChainData } from "@/lib/base-intel";
 import { fetchBaseChangelog } from "@/lib/base-changelog";
+import { fetchBaseStatus } from "@/lib/base-status";
 import { Sparkline } from "@/components/sparkline";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
@@ -92,10 +93,11 @@ const BUILDER_TOOLKIT = [
 ];
 
 export default async function CommandDeck() {
-  const [chainData, feed, changelog] = await Promise.all([
+  const [chainData, feed, changelog, networkStatus] = await Promise.all([
     fetchBaseChainData(),
     fetchIntelFeed(),
     fetchBaseChangelog(),
+    fetchBaseStatus(),
   ]);
 
   return (
@@ -126,15 +128,23 @@ export default async function CommandDeck() {
                   </p>
                   <div className="mt-2 space-y-0.5 text-xs sm:text-sm">
                     <p>
-                      <span className="text-[#787878]">SYSTEM_STATUS:</span>{" "}
+                      <span className="text-[#787878]">NETWORK:</span>{" "}
                       <span
-                        className={`font-bold status-live ${
-                          chainData.status === "OPTIMAL"
-                            ? "text-[#00C853]"
-                            : "text-[#FF3B30]"
+                        className={`font-bold ${
+                          networkStatus.overall === "operational"
+                            ? "text-[#00C853] status-live"
+                            : networkStatus.overall === "degraded"
+                              ? "text-[#FFB000]"
+                              : "text-[#FF3B30]"
                         }`}
                       >
-                        OBSERVING_BASE_MAINNET
+                        {networkStatus.overall === "operational"
+                          ? "OPERATIONAL"
+                          : networkStatus.overall === "degraded"
+                            ? "DEGRADED"
+                            : networkStatus.overall === "partial_outage"
+                              ? "PARTIAL_OUTAGE"
+                              : "MAJOR_OUTAGE"}
                       </span>
                     </p>
                     <p>
@@ -381,6 +391,51 @@ export default async function CommandDeck() {
                 ))}
               </div>
             </div>
+
+            {/* Network Status */}
+            {networkStatus.components.length > 0 && (
+              <div className="mt-5 pt-5 border-t border-[#1a1f2e]">
+                <h3 className="font-mono text-xs font-bold text-[#787878] tracking-wide mb-3">
+                  NETWORK_STATUS
+                </h3>
+                <div className="space-y-1">
+                  {networkStatus.components.map((c) => (
+                    <div
+                      key={c.name}
+                      className="flex items-center justify-between font-mono text-xs"
+                    >
+                      <span className="text-[#787878]">{c.name}</span>
+                      <span
+                        className={
+                          c.status === "operational"
+                            ? "text-[#00C853]"
+                            : c.status.includes("degraded")
+                              ? "text-[#FFB000]"
+                              : "text-[#FF3B30]"
+                        }
+                      >
+                        ●
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {networkStatus.activeIncidents.length > 0 && (
+                  <div className="mt-2 py-1.5 px-2 border border-[#FFB000]/20 bg-[#FFB000]/5">
+                    <p className="font-mono text-[10px] text-[#FFB000]/80">
+                      {networkStatus.activeIncidents[0].name}
+                    </p>
+                  </div>
+                )}
+                <a
+                  href="https://status.base.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block font-mono text-[10px] text-[#444] hover:text-[#0052FF] mt-2 transition-colors"
+                >
+                  status.base.org →
+                </a>
+              </div>
+            )}
           </aside>
         </div>
       </div>

@@ -5,10 +5,10 @@ export const revalidate = 300; // 5 min cache
 /**
  * GET /api/stats — Public Base ecosystem stats endpoint.
  * No auth required. Machine-readable JSON for agents and builders.
- * Data sourced from DeFiLlama (free, no API key).
+ * Data sourced from DeFiLlama + status.base.org (free, no API key).
  */
 export async function GET() {
-  const [chains, dex, fees, block] = await Promise.allSettled([
+  const [chains, dex, fees, block, status] = await Promise.allSettled([
     fetch('https://api.llama.fi/v2/chains').then((r) => r.json()),
     fetch('https://api.llama.fi/overview/dexs/Base').then((r) => r.json()),
     fetch('https://api.llama.fi/overview/fees/Base').then((r) => r.json()),
@@ -17,7 +17,15 @@ export async function GET() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
     }).then((r) => r.json()),
+    fetch('https://status.base.org/api/v2/status.json').then((r) => r.json()),
   ]);
+
+  // Parse network status
+  let networkStatus = 'unknown';
+  if (status.status === 'fulfilled') {
+    const indicator = (status.value as { status?: { indicator?: string } })?.status?.indicator;
+    networkStatus = indicator === 'none' ? 'operational' : indicator || 'unknown';
+  }
 
   // Parse TVL
   let tvl = null;
@@ -54,6 +62,7 @@ export async function GET() {
       chain: 'base',
       chainId: 8453,
       timestamp: new Date().toISOString(),
+      networkStatus,
       tvl,
       dexVolume24h,
       dexVolume7d,
