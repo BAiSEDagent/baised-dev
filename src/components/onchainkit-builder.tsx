@@ -68,10 +68,19 @@ export function OnchainKitBuilder() {
   const [selected, setSelected] = useState<keyof typeof COMPONENTS>('Identity');
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(COMPONENTS[selected].code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // H-3: Clipboard error handling
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(COMPONENTS[selected].code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      // M-2: Analytics
+      console.log('[analytics] component_copied', { component: selected });
+    } catch (err) {
+      console.error('[analytics] copy_failed', err);
+      // Fallback for non-HTTPS or permission denied
+      alert('Copy failed. Please copy manually or enable clipboard permissions.');
+    }
   };
 
   return (
@@ -81,11 +90,13 @@ export function OnchainKitBuilder() {
       </h4>
 
       {/* Component Selector */}
-      <div className="flex flex-wrap gap-2 mb-3">
+      <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="OnchainKit component selector">
         {Object.keys(COMPONENTS).map((comp) => (
           <button
             key={comp}
             onClick={() => setSelected(comp as keyof typeof COMPONENTS)}
+            aria-label={`Select ${comp} component`} // M-4: Accessibility
+            aria-pressed={selected === comp} // M-4: Accessibility
             className={`font-mono text-xs px-2.5 py-1 border transition-colors ${
               selected === comp
                 ? 'bg-[#0052FF] text-white border-[#0052FF]'

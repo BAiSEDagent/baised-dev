@@ -7,6 +7,7 @@ import { Sparkline } from "@/components/sparkline";
 import { OnchainKitBuilder } from "@/components/onchainkit-builder";
 import { BasenameResolver } from "@/components/basename-resolver";
 import { GasEstimator } from "@/components/gas-estimator";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
 import Link from "next/link";
@@ -327,9 +328,15 @@ export default async function CommandDeck() {
 
             {/* Interactive Modules */}
             <div className="space-y-5">
-              <OnchainKitBuilder />
-              <BasenameResolver />
-              <GasEstimator />
+              <ErrorBoundary>
+                <OnchainKitBuilder />
+              </ErrorBoundary>
+              <ErrorBoundary>
+                <BasenameResolver />
+              </ErrorBoundary>
+              <ErrorBoundary>
+                <GasEstimator />
+              </ErrorBoundary>
             </div>
 
             {/* Base Engineering Blog */}

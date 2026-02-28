@@ -17,7 +17,7 @@ export function GasEstimator() {
 
   useEffect(() => {
     fetchGasData();
-    const interval = setInterval(fetchGasData, 300000); // Refresh every 5 min
+    const interval = setInterval(fetchGasData, 120000); // L-2: Refresh every 2 min (Base gas changes quickly)
     return () => clearInterval(interval);
   }, []);
 
@@ -28,14 +28,18 @@ export function GasEstimator() {
       setGasPrice(data.gasPriceGwei);
       setEthPrice(data.ethPrice);
       setLoading(false);
-    } catch {
+      // M-2: Analytics event
+      console.log('[analytics] gas_estimate_fetched', { success: true, operation });
+    } catch (err) {
       setLoading(false);
+      console.error('[analytics] gas_estimate_failed', err);
     }
   };
 
   const estimatedGas = GAS_OPERATIONS[operation];
-  const costGwei = gasPrice ? (estimatedGas * gasPrice) / 1e9 : null;
-  const costUsd = costGwei && ethPrice ? (costGwei * ethPrice).toFixed(4) : null;
+  // C-1: Fix gas cost calculation (gas units × Gwei/gas = Gwei, then / 1e9 = ETH)
+  const costEth = gasPrice ? (estimatedGas * gasPrice) / 1e9 : null;
+  const costUsd = costEth && ethPrice ? (costEth * ethPrice).toFixed(4) : null;
 
   return (
     <div className="workbench-module">
@@ -68,14 +72,26 @@ export function GasEstimator() {
         <div className="flex justify-between items-center">
           <span className="font-mono text-xs text-[#787878]">Current Gas Price:</span>
           <span className="font-mono text-xs text-[#ededed] tabular-nums">
-            {loading ? '...' : gasPrice ? `${gasPrice.toFixed(4)} Gwei` : 'N/A'}
+            {loading ? (
+              <span className="inline-block w-16 h-3 bg-[#1a2a3a] animate-pulse" />
+            ) : gasPrice ? (
+              `${gasPrice.toFixed(4)} Gwei`
+            ) : (
+              'N/A'
+            )}
           </span>
         </div>
 
         <div className="flex justify-between items-center pt-2 border-t border-[#1a2a3a]">
           <span className="font-mono text-xs font-bold text-[#787878]">Total Cost (USD):</span>
           <span className="font-mono text-sm font-bold text-[#00C853] tabular-nums">
-            {loading ? '...' : costUsd ? `$${costUsd}` : 'N/A'}
+            {loading ? (
+              <span className="inline-block w-20 h-4 bg-[#1a2a3a] animate-pulse" />
+            ) : costUsd ? (
+              `$${costUsd}`
+            ) : (
+              'N/A'
+            )}
           </span>
         </div>
       </div>

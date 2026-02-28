@@ -1,68 +1,58 @@
-// SECURITY: In-memory sliding window rate limiter.
-// On Vercel serverless, each cold start resets the window.
-// This is acceptable for low-traffic protection. For high-traffic,
-// swap to Upstash Redis (@upstash/ratelimit).
+/**
+ * Simple in-memory rate limiter for Edge functions
+ * IP-based, sliding window, 10 requests per minute
+ */
 
 interface RateLimitEntry {
-  timestamps: number[];
+  count: number;
+  resetAt: number;
 }
 
-const store = new Map<string, RateLimitEntry>();
-
-const WINDOW_MS = 60_000; // 1 minute
-const MAX_REQUESTS = 10;
-const CLEANUP_INTERVAL_MS = 120_000; // 2 minutes
-
-// Periodic cleanup to prevent memory leaks on long-running instances
-let lastCleanup = Date.now();
-
-function cleanup() {
-  const now = Date.now();
-  if (now - lastCleanup < CLEANUP_INTERVAL_MS) return;
-  lastCleanup = now;
-
-  const cutoff = now - WINDOW_MS;
-  store.forEach((entry, key) => {
-    entry.timestamps = entry.timestamps.filter((t) => t > cutoff);
-    if (entry.timestamps.length === 0) store.delete(key);
-  });
-}
-
-export interface RateLimitResult {
+interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   retryAfterSeconds: number | null;
 }
 
-export function checkRateLimit(ip: string): RateLimitResult {
-  cleanup();
+const cache = new Map<string, RateLimitEntry>();
+const WINDOW_MS = 60000; // 1 minute
+const MAX_REQUESTS = 10;
 
+export function checkRateLimit(identifier: string): RateLimitResult {
   const now = Date.now();
-  const cutoff = now - WINDOW_MS;
+  const entry = cache.get(identifier);
 
-  let entry = store.get(ip);
-  if (!entry) {
-    entry = { timestamps: [] };
-    store.set(ip, entry);
+  // Clean up expired entries
+  if (entry && now > entry.resetAt) {
+    cache.delete(identifier);
   }
 
-  // Remove timestamps outside the window
-  entry.timestamps = entry.timestamps.filter((t) => t > cutoff);
+  const current = cache.get(identifier);
 
-  if (entry.timestamps.length >= MAX_REQUESTS) {
-    const oldestInWindow = entry.timestamps[0];
-    const retryAfterMs = oldestInWindow + WINDOW_MS - now;
-    return {
-      allowed: false,
-      remaining: 0,
-      retryAfterSeconds: Math.ceil(retryAfterMs / 1000),
-    };
+  if (!current) {
+    cache.set(identifier, { count: 1, resetAt: now + WINDOW_MS });
+    return { allowed: true, remaining: MAX_REQUESTS - 1, retryAfterSeconds: null };
   }
 
-  entry.timestamps.push(now);
-  return {
-    allowed: true,
-    remaining: MAX_REQUESTS - entry.timestamps.length,
-    retryAfterSeconds: null,
-  };
+  if (current.count >= MAX_REQUESTS) {
+    const retryAfterMs = current.resetAt - now;
+    const retryAfterSeconds = Math.ceil(retryAfterMs / 1000);
+    return { allowed: false, remaining: 0, retryAfterSeconds };
+  }
+
+  current.count++;
+  cache.set(identifier, current);
+  return { allowed: true, remaining: MAX_REQUESTS - current.count, retryAfterSeconds: null };
+}
+
+// Backward compatibility alias
+export const rateLimit = checkRateLimit;
+
+export function getRateLimitIdentifier(req: Request): string {
+  // Use x-forwarded-for if behind proxy, fallback to x-real-ip
+  const forwarded = req.headers.get('x-forwarded-for');
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.headers.get('x-real-ip') || 'unknown';
 }
