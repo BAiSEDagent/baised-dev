@@ -14,10 +14,12 @@ async function getDb() {
   }
 }
 
-// SECURITY: Extract client IP from Vercel headers
+// SECURITY: Extract client IP — prefer Vercel's trusted header over spoofable X-Forwarded-For
 function getClientIp(): string {
   const h = headers();
+  // x-vercel-forwarded-for is set by Vercel edge and cannot be spoofed by clients
   return (
+    h.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ||
     h.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     h.get('x-real-ip') ||
     'unknown'
