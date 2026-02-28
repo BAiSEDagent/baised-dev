@@ -7,7 +7,7 @@ const USDC_DECIMALS = 6;
 
 // x402 payment configuration
 export const X402_CONFIG = {
-  payee: '0xBA15EDb15edB15eDb15EDb15edB15EDb15edB15E' as Address,
+  payee: '0x7458B08E13bBC390cD2CF6a8cE8980e4954E13b8' as Address, // baisedagent.base.eth
   /** Minimum payment in USDC atomic units (1e6 = 1 USDC). 0.01 USDC = 10000 */
   minAmount: BigInt(10000), // 0.01 USDC
   asset: `eip155:8453/erc20:${USDC_ADDRESS}`,
