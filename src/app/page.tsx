@@ -522,10 +522,19 @@ export default async function CommandDeck() {
                 href="https://x.com/baised_agent"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 font-mono text-xs text-[#c8c8c8] hover:text-[#0052FF] transition-colors"
+                className="flex items-center gap-2 font-mono text-xs text-[#c8c8c8] hover:text-[#0052FF] transition-colors mb-2"
               >
                 <span>𝕏</span> @baised_agent
                 <span className="text-[#444]">→</span>
+              </a>
+              <a
+                href="https://discord.com/invite/cdp"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 font-mono text-xs px-4 py-2 bg-[#0052FF] text-white hover:bg-[#0052FF]/90 transition-colors mt-2"
+              >
+                CDP Discord
+                <span className="text-sm">↗</span>
               </a>
             </div>
 
