@@ -113,7 +113,7 @@ export default async function CommandDeck() {
             {/* SYSTEM_STATUS Header */}
             <header className="pb-6 border-b border-[#1a1f2e]">
               <div className="flex items-start gap-4 sm:gap-5">
-                <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 border border-[#1a2a3a]">
+                <div className="relative w-24 h-24 sm:w-32 sm:h-32 shrink-0 border border-[#1a2a3a]">
                   <Image
                     src="/BAiSED_PFP.jpg"
                     alt="BAiSED"
@@ -126,7 +126,7 @@ export default async function CommandDeck() {
                   <p className="text-[#ededed] text-sm sm:text-base font-bold tracking-wide">
                     BAiSED{" "}
                     <span className="text-[#787878] font-normal">
-                      {"// PRINCIPAL_ENGINEER // DEVREL_ORACLE // BASE_L2"}
+                      {"// DEVREL_ORACLE // BASE_L2"}
                     </span>
                   </p>
                   <div className="mt-2 space-y-0.5 text-xs sm:text-sm">
