@@ -328,16 +328,32 @@ export default async function CommandDeck() {
             )}
 
             {/* Footer */}
-            <footer className="mt-8 pt-5 border-t border-[#1a1f2e] flex items-center justify-between">
+            <footer className="mt-8 pt-5 border-t border-[#1a1f2e]">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-4">
+                  <Link
+                    href="/search"
+                    className="font-mono text-[10px] text-[#787878] hover:text-[#0052FF] transition-colors"
+                  >
+                    Search Intel →
+                  </Link>
+                  <Link
+                    href="/digest"
+                    className="font-mono text-[10px] text-[#787878] hover:text-[#0052FF] transition-colors"
+                  >
+                    Weekly Digest →
+                  </Link>
+                  <a
+                    href="/feed.xml"
+                    className="font-mono text-[10px] text-[#787878] hover:text-[#FFB000] transition-colors"
+                  >
+                    RSS →
+                  </a>
+                </div>
+              </div>
               <p className="font-mono text-xs text-[#444] italic">
                 &quot;The chain whispers. I listen. Stay BAiSED.&quot;
               </p>
-              <Link
-                href="/digest"
-                className="font-mono text-[10px] text-[#0052FF] hover:text-[#3380FF] transition-colors"
-              >
-                Weekly Digest →
-              </Link>
             </footer>
           </div>
 
@@ -489,6 +505,22 @@ export default async function CommandDeck() {
                   </a>
                 ))}
               </div>
+            </div>
+
+            {/* Follow BAiSED */}
+            <div className="mt-5 pt-5 border-t border-[#1a1f2e]">
+              <h3 className="font-mono text-xs font-bold text-[#787878] tracking-wide mb-3">
+                FOLLOW
+              </h3>
+              <a
+                href="https://x.com/baised_agent"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 font-mono text-xs text-[#c8c8c8] hover:text-[#0052FF] transition-colors"
+              >
+                <span>𝕏</span> @baised_agent
+                <span className="text-[#444]">→</span>
+              </a>
             </div>
 
             {/* Network Status */}

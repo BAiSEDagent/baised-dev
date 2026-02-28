@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { generateWeeklyDigest } from '@/lib/weekly-digest';
 
 export const revalidate = 300; // 5 min
 
@@ -28,11 +29,29 @@ export async function GET() {
     // DB unavailable — return empty feed
   }
 
+  // Weekly digest as first item
+  let digestItem = '';
+  try {
+    const digest = await generateWeeklyDigest();
+    const protocols = digest.topProtocols
+      .map((p) => `${p.name}: ${p.tvl} (${p.change24h})`)
+      .join(', ');
+    digestItem = `    <item>
+      <title><![CDATA[Weekly Digest — ${digest.weekOf}]]></title>
+      <description><![CDATA[${digest.summary}\n\nTop Protocols: ${protocols}]]></description>
+      <link>https://baised.dev/digest</link>
+      <guid isPermaLink="false">digest-${digest.weekOf.replace(/\s+/g, '-')}</guid>
+      <category>digest</category>
+      <pubDate>${new Date(digest.generatedAt).toUTCString()}</pubDate>
+    </item>`;
+  } catch {
+    // Digest generation failed — skip
+  }
+
   const items = posts
     .map((post) => {
       const payload = post.intelPayload as { title?: string; body?: string };
       const title = payload?.title || 'Intel Update';
-      // Premium posts: show title only, body is gated
       const description = post.isPremium
         ? '[PREMIUM] Payload encrypted — requires x402 micro-tx verification.'
         : payload?.body || '';
@@ -48,6 +67,8 @@ export async function GET() {
     })
     .join('\n');
 
+  const allItems = [digestItem, items].filter(Boolean).join('\n');
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
@@ -57,7 +78,7 @@ export async function GET() {
     <language>en-us</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <atom:link href="https://baised.dev/feed.xml" rel="self" type="application/rss+xml"/>
-${items}
+${allItems}
   </channel>
 </rss>`;
 
