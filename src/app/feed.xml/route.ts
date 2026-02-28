@@ -22,7 +22,6 @@ export async function GET() {
     id: string;
     timestamp: Date;
     category: string;
-    isPremium: boolean;
     intelPayload: unknown;
   }> = [];
 
@@ -35,7 +34,6 @@ export async function GET() {
         id: true,
         timestamp: true,
         category: true,
-        isPremium: true,
         intelPayload: true,
       },
     });
@@ -66,9 +64,7 @@ export async function GET() {
     .map((post) => {
       const payload = post.intelPayload as { title?: string; body?: string };
       const title = payload?.title || 'Intel Update';
-      const description = post.isPremium
-        ? '[PREMIUM] Payload encrypted — requires x402 micro-tx verification.'
-        : payload?.body || '';
+      const description = payload?.body || '';
 
       return `    <item>
       <title><![CDATA[${safeCdata(title)}]]></title>

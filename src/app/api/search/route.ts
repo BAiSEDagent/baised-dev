@@ -78,9 +78,7 @@ export async function GET(request: NextRequest) {
           timestamp: p.timestamp,
           category: p.category,
           title: payload?.title || null,
-          // SECURITY: Redact premium post bodies — they're behind x402 paywall
-          body: p.isPremium ? null : (payload?.body || null),
-          isPremium: p.isPremium,
+          body: payload?.body || null,
         };
       }),
     });

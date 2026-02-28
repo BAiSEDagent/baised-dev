@@ -126,8 +126,6 @@ export async function POST(req: Request) {
         signature: data.signature,
         category: data.category,
         status: 'published',
-        isPremium: data.isPremium,
-        priceUsdc: data.priceUsdc,
       },
     });
 
@@ -147,68 +145,40 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const txHash = req.headers.get('X-Payment-TxHash');
-
-  // No payment header → 402 challenge
-  if (!txHash) {
-    // SECURITY: Lazy import to avoid loading viem when not needed
-    const { paymentRequiredHeaders } = await import('@/lib/x402');
-    return NextResponse.json(
-      {
-        error: 'Payment Required',
-        message: 'Send USDC on Base to access intel. Include tx hash in X-Payment-TxHash header.',
-      },
-      {
-        status: 402,
-        headers: { ...corsHeaders('GET'), ...paymentRequiredHeaders() },
-      }
-    );
-  }
-
-  // Validate tx hash format
-  if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
-    return NextResponse.json(
-      { error: 'Invalid tx hash format' },
-      { status: 400, headers: corsHeaders('GET') }
-    );
-  }
-
   const db = await getDb();
   if (!db) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
   }
 
-  // SECURITY: Check replay — has this tx already been used?
-  const existing = await db.paymentLedger.findUnique({ where: { txHash } });
-  if (existing) {
-    return NextResponse.json(
-      { error: 'Payment already used', txHash },
-      { status: 409, headers: corsHeaders('GET') }
-    );
+  // PIVOT: Intel is now FREE. x402 headers remain for optional tipping, but payment is not required.
+  const txHash = req.headers.get('X-Payment-TxHash');
+
+  // Optional tip processing — if payment header provided, record it as support
+  if (txHash && /^0x[a-fA-F0-9]{64}$/.test(txHash)) {
+    try {
+      // Check replay
+      const existing = await db.paymentLedger.findUnique({ where: { txHash } });
+      if (!existing) {
+        const { verifyPayment } = await import('@/lib/x402');
+        const verification = await verifyPayment(txHash as `0x${string}`);
+        if (verification.valid) {
+          await db.paymentLedger.create({
+            data: {
+              txHash,
+              payer: verification.payer,
+              amount: verification.amount,
+              blockNumber: verification.blockNumber,
+            },
+          });
+        }
+      }
+    } catch (error) {
+      // Tip verification failed — log but don't block access
+      console.error('Tip verification error:', error);
+    }
   }
 
-  // Verify payment onchain via Viem
-  const { verifyPayment } = await import('@/lib/x402');
-  const verification = await verifyPayment(txHash as `0x${string}`);
-
-  if (!verification.valid) {
-    return NextResponse.json(
-      { error: 'Payment verification failed', detail: verification.error },
-      { status: 402, headers: corsHeaders('GET') }
-    );
-  }
-
-  // Record payment in ledger (replay protection)
-  await db.paymentLedger.create({
-    data: {
-      txHash,
-      payer: verification.payer,
-      amount: verification.amount,
-      blockNumber: verification.blockNumber,
-    },
-  });
-
-  // Return gated intel
+  // Return all published intel (free)
   try {
     const posts = await db.intelPost.findMany({
       where: { status: 'published' },
@@ -216,9 +186,22 @@ export async function GET(req: Request) {
       take: 20,
     });
 
+    // Include x402 headers for discoverability (optional tipping protocol)
+    const { paymentRequiredHeaders } = await import('@/lib/x402');
+
     return NextResponse.json(
-      { count: posts.length, intel: posts, payment: { txHash, payer: verification.payer } },
-      { headers: corsHeaders('GET') }
+      {
+        count: posts.length,
+        intel: posts,
+        note: 'All intel is free. Support BAiSED via optional x402 tips.',
+      },
+      {
+        headers: {
+          ...corsHeaders('GET'),
+          ...paymentRequiredHeaders(),
+          'X-Payment-Optional': 'true',
+        },
+      }
     );
   } catch (error) {
     console.error('Intel GET error:', error);

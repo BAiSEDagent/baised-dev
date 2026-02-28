@@ -16,8 +16,6 @@ interface IntelItem {
   blockHeight: number;
   intelPayload: { type?: string; title?: string; body?: string };
   category: string;
-  isPremium: boolean;
-  priceUsdc: string | null;
 }
 
 async function fetchIntelFeed(): Promise<IntelItem[]> {
@@ -202,11 +200,6 @@ export default async function CommandDeck() {
                         >
                           [{categoryTag(item.category)}]
                         </span>
-                        {item.isPremium && (
-                          <span className="text-[#FFB000] font-bold ml-1">
-                            [PREMIUM: ${item.priceUsdc || "—"} USDC]
-                          </span>
-                        )}
                         {" "}
                         <span className="text-[#c8c8c8]">
                           {item.intelPayload.title ||
@@ -214,22 +207,12 @@ export default async function CommandDeck() {
                             "—"}
                         </span>
                       </p>
-                      {item.isPremium ? (
-                        <div className="mt-1.5 py-2 px-3 border border-[#FFB000]/20 bg-[#FFB000]/5">
-                          <p className="font-mono text-xs text-[#FFB000]/70 tracking-wider">
-                            PAYLOAD ENCRYPTED {"// "}REQUIRE x402 MICRO-TX
-                            VERIFICATION
-                          </p>
-                        </div>
-                      ) : (
-                        item.intelPayload.body &&
-                        item.intelPayload.title && (
-                          <p className="font-mono text-xs text-[#787878] mt-0.5 ml-0">
-                            {item.intelPayload.body.length > 120
-                              ? item.intelPayload.body.slice(0, 120) + "…"
-                              : item.intelPayload.body}
-                          </p>
-                        )
+                      {item.intelPayload.body && item.intelPayload.title && (
+                        <p className="font-mono text-xs text-[#787878] mt-0.5 ml-0">
+                          {item.intelPayload.body.length > 120
+                            ? item.intelPayload.body.slice(0, 120) + "…"
+                            : item.intelPayload.body}
+                        </p>
                       )}
                     </article>
                   ))}

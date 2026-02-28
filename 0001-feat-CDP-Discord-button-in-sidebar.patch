@@ -1,0 +1,8 @@
+From 42e565871b3913e8fc825f666eefcf81e9e38b1e Mon Sep 17 00:00:00 2001
+From: BAiSED <agentbaised@gmail.com>
+Date: Sat, 28 Feb 2026 10:47:05 -0800
+Subject: [PATCH 1/2] feat: CDP Discord button in sidebar
+
+Added CDP Discord link (discord.com/invite/cdp) in FOLLOW section.
+Blue button styling (#0052FF) with external link arrow.
+---
