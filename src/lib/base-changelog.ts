@@ -5,11 +5,13 @@
 
 export interface ChangelogEntry {
   protocol: string;
+  slug: string;
   category: string;
   tvl: string;
   change24h: string;
   changeDirection: 'up' | 'down' | 'flat';
   url: string;
+  sparkline: number[]; // 7 normalized values (0-1) for SVG sparkline
 }
 
 /**
@@ -46,17 +48,54 @@ export async function fetchBaseChangelog(): Promise<ChangelogEntry[]> {
       .sort((a, b) => (b.tvl || 0) - (a.tvl || 0))
       .slice(0, 8);
 
-    return baseProtocols.map((p) => {
-      const change = p.change_1d || 0;
-      return {
-        protocol: p.name,
-        category: p.category || 'Unknown',
-        tvl: formatCompact(p.tvl || 0),
-        change24h: change === 0 ? '—' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`,
-        changeDirection: change > 0.1 ? 'up' : change < -0.1 ? 'down' : 'flat',
-        url: p.url || '#',
-      };
+    // Fetch sparklines in parallel for top protocols
+    const entries = await Promise.all(
+      baseProtocols.map(async (p) => {
+        const change = p.change_1d || 0;
+        const slug = (p as Record<string, unknown>).slug as string || p.name.toLowerCase().replace(/\s+/g, '-');
+        const sparkline = await fetchProtocolSparkline(slug);
+        return {
+          protocol: p.name,
+          slug,
+          category: p.category || 'Unknown',
+          tvl: formatCompact(p.tvl || 0),
+          change24h: change === 0 ? '—' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`,
+          changeDirection: (change > 0.1 ? 'up' : change < -0.1 ? 'down' : 'flat') as 'up' | 'down' | 'flat',
+          url: p.url || '#',
+          sparkline,
+        };
+      })
+    );
+
+    return entries;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch 7-day Base TVL history for a protocol, normalized to 0-1 for sparkline.
+ */
+async function fetchProtocolSparkline(slug: string): Promise<number[]> {
+  try {
+    const res = await fetch(`https://api.llama.fi/protocol/${slug}`, {
+      next: { revalidate: 900 },
     });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const baseTvl: Array<{ date: number; totalLiquidityUSD: number }> =
+      data?.chainTvls?.Base?.tvl || [];
+
+    if (baseTvl.length < 7) return [];
+
+    // Last 7 data points
+    const last7 = baseTvl.slice(-7).map((d) => d.totalLiquidityUSD);
+    const min = Math.min(...last7);
+    const max = Math.max(...last7);
+    const range = max - min || 1;
+
+    return last7.map((v) => (v - min) / range);
   } catch {
     return [];
   }

@@ -56,22 +56,38 @@ async function fetchLatestBlock(): Promise<{
 }
 
 async function fetchBaseTVL(): Promise<string> {
-  const res = await fetch("https://api.llama.fi/v2/chains", {
-    next: { revalidate: 300 }, // 5 min cache — TVL doesn't change fast
-  });
+  // Primary: /v2/chains (lightweight, current snapshot)
+  try {
+    const res = await fetch("https://api.llama.fi/v2/chains", {
+      next: { revalidate: 300 },
+    });
 
-  if (!res.ok) return "$—";
+    if (res.ok) {
+      const chains: Array<{ name: string; tvl: number }> = await res.json();
+      const base = chains.find((c) => c.name.toLowerCase() === "base");
+      if (base) return formatUSD(base.tvl);
+    }
+  } catch {
+    // Fall through to secondary
+  }
 
-  const chains: Array<{ name: string; tvl: number }> = await res.json();
-  const base = chains.find(
-    (c) => c.name.toLowerCase() === "base"
-  );
+  // Fallback: /v2/historicalChainTvl/Base (last data point)
+  try {
+    const res = await fetch("https://api.llama.fi/v2/historicalChainTvl/Base", {
+      next: { revalidate: 600 }, // 10 min cache for fallback
+    });
 
-  if (!base) return "$—";
+    if (res.ok) {
+      const data: Array<{ date: number; tvl: number }> = await res.json();
+      if (data.length > 0) {
+        return formatUSD(data[data.length - 1].tvl);
+      }
+    }
+  } catch {
+    // Both failed
+  }
 
-  // Format: $3.9B, $12.4B, $850M
-  const tvl = base.tvl;
-  return formatUSD(tvl);
+  return "$—";
 }
 
 async function fetchBaseDexVolume(): Promise<string> {

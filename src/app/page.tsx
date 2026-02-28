@@ -1,5 +1,6 @@
 import { fetchBaseChainData } from "@/lib/base-intel";
 import { fetchBaseChangelog } from "@/lib/base-changelog";
+import { Sparkline } from "@/components/sparkline";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
 
@@ -236,6 +237,9 @@ export default async function CommandDeck() {
                         <th className="pb-2 pr-3 font-medium text-right">
                           TVL
                         </th>
+                        <th className="pb-2 pr-3 font-medium text-right">
+                          7D
+                        </th>
                         <th className="pb-2 font-medium text-right">24H</th>
                       </tr>
                     </thead>
@@ -260,6 +264,20 @@ export default async function CommandDeck() {
                           </td>
                           <td className="py-1.5 pr-3 text-[#ededed] text-right tabular-nums">
                             {entry.tvl}
+                          </td>
+                          <td className="py-1.5 pr-3 text-right">
+                            {entry.sparkline.length > 0 && (
+                              <Sparkline
+                                data={entry.sparkline}
+                                color={
+                                  entry.changeDirection === "up"
+                                    ? "#00C853"
+                                    : entry.changeDirection === "down"
+                                      ? "#FF3B30"
+                                      : "#787878"
+                                }
+                              />
+                            )}
                           </td>
                           <td
                             className={`py-1.5 text-right tabular-nums ${
