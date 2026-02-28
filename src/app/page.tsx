@@ -332,6 +332,12 @@ export default async function CommandDeck() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-4">
                   <Link
+                    href="/agents"
+                    className="font-mono text-[10px] text-[#787878] hover:text-[#0052FF] transition-colors"
+                  >
+                    Agent Directory →
+                  </Link>
+                  <Link
                     href="/search"
                     className="font-mono text-[10px] text-[#787878] hover:text-[#0052FF] transition-colors"
                   >

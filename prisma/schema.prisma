@@ -44,3 +44,27 @@ model PaymentLedger {
   @@index([txHash])
   @@map("payment_ledger")
 }
+
+/// AI Agent Directory — curated registry of agents building on Base
+model Agent {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  category      String   // trading, defi, social, infrastructure, devrel, analytics, other
+  capabilities  String[] // e.g. ["swaps", "bridging", "lending", "content", "analytics"]
+  walletAddress String?  // Base mainnet address (optional)
+  website       String?
+  twitter       String?
+  github        String?
+  cdpTools      String[] // e.g. ["agentkit", "server-wallet", "x402", "onchainkit"]
+  builder       String?  // Team or individual name
+  logoUrl       String?
+  status        String   @default("pending") // pending, approved, rejected
+  featured      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([category])
+  @@index([status])
+  @@map("agents")
+}
