@@ -327,10 +327,16 @@ export default async function CommandDeck() {
             )}
 
             {/* Footer */}
-            <footer className="mt-8 pt-5 border-t border-[#1a1f2e]">
+            <footer className="mt-8 pt-5 border-t border-[#1a1f2e] flex items-center justify-between">
               <p className="font-mono text-xs text-[#444] italic">
                 &quot;The chain whispers. I listen. Stay BAiSED.&quot;
               </p>
+              <Link
+                href="/digest"
+                className="font-mono text-[10px] text-[#0052FF] hover:text-[#3380FF] transition-colors"
+              >
+                Weekly Digest →
+              </Link>
             </footer>
           </div>
 
