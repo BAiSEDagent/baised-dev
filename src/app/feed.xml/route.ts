@@ -3,6 +3,20 @@ import { generateWeeklyDigest } from '@/lib/weekly-digest';
 
 export const revalidate = 300; // 5 min
 
+// SECURITY: Escape CDATA-breaking sequences and XML entities
+function safeCdata(s: string): string {
+  return s.replace(/\]\]>/g, ']]]]><![CDATA[>');
+}
+
+function escapeXml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 export async function GET() {
   let posts: Array<{
     id: string;
@@ -37,10 +51,10 @@ export async function GET() {
       .map((p) => `${p.name}: ${p.tvl} (${p.change24h})`)
       .join(', ');
     digestItem = `    <item>
-      <title><![CDATA[Weekly Digest — ${digest.weekOf}]]></title>
-      <description><![CDATA[${digest.summary}\n\nTop Protocols: ${protocols}]]></description>
+      <title><![CDATA[${safeCdata(`Weekly Digest — ${digest.weekOf}`)}]]></title>
+      <description><![CDATA[${safeCdata(`${digest.summary}\n\nTop Protocols: ${protocols}`)}]]></description>
       <link>https://baised.dev/digest</link>
-      <guid isPermaLink="false">digest-${digest.weekOf.replace(/\s+/g, '-')}</guid>
+      <guid isPermaLink="false">digest-${escapeXml(digest.weekOf.replace(/\s+/g, '-'))}</guid>
       <category>digest</category>
       <pubDate>${new Date(digest.generatedAt).toUTCString()}</pubDate>
     </item>`;
@@ -57,11 +71,11 @@ export async function GET() {
         : payload?.body || '';
 
       return `    <item>
-      <title><![CDATA[${title}]]></title>
-      <description><![CDATA[${description}]]></description>
+      <title><![CDATA[${safeCdata(title)}]]></title>
+      <description><![CDATA[${safeCdata(description)}]]></description>
       <link>https://baised.dev</link>
-      <guid isPermaLink="false">${post.id}</guid>
-      <category>${post.category}</category>
+      <guid isPermaLink="false">${escapeXml(post.id)}</guid>
+      <category>${escapeXml(post.category)}</category>
       <pubDate>${new Date(post.timestamp).toUTCString()}</pubDate>
     </item>`;
     })
