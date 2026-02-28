@@ -3,6 +3,7 @@ import { fetchBaseChangelog } from "@/lib/base-changelog";
 import { Sparkline } from "@/components/sparkline";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
+import Link from "next/link";
 
 export const revalidate = 30;
 
@@ -295,10 +296,17 @@ export default async function CommandDeck() {
                     </tbody>
                   </table>
                 </div>
-                <p className="font-mono text-[10px] text-[#444] mt-3">
-                  Source: DeFiLlama · Updated every 15 min · Top protocols on
-                  Base by TVL
-                </p>
+                <div className="flex items-center justify-between mt-3">
+                  <p className="font-mono text-[10px] text-[#444]">
+                    Source: DeFiLlama · Updated every 15 min
+                  </p>
+                  <Link
+                    href="/dashboard"
+                    className="font-mono text-[10px] text-[#0052FF] hover:text-[#3380FF] transition-colors"
+                  >
+                    Full Dashboard →
+                  </Link>
+                </div>
               </section>
             )}
 

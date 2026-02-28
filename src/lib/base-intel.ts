@@ -112,6 +112,32 @@ async function fetchBaseFees(): Promise<string> {
   return formatUSD(fees);
 }
 
+/**
+ * Fetch 30-day historical TVL for Base (for dashboard chart).
+ */
+export async function fetchBaseTVLHistory(): Promise<
+  Array<{ date: string; tvl: number }>
+> {
+  try {
+    const res = await fetch("https://api.llama.fi/v2/historicalChainTvl/Base", {
+      next: { revalidate: 900 },
+    });
+    if (!res.ok) return [];
+
+    const data: Array<{ date: number; tvl: number }> = await res.json();
+    // Last 30 data points
+    return data.slice(-30).map((d) => ({
+      date: new Date(d.date * 1000).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+      tvl: Math.round(d.tvl / 1e6), // In millions for chart readability
+    }));
+  } catch {
+    return [];
+  }
+}
+
 function formatUSD(value: number): string {
   if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
   if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
