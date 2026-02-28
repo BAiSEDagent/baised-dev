@@ -123,10 +123,15 @@
     }
     .item-category {
       display: inline-block;
-      color: #0052FF;
       font-weight: 700;
       margin-right: 0.5rem;
     }
+    .cat-ecosystem { color: #00C853; }
+    .cat-devlog { color: #0052FF; }
+    .cat-security { color: #FF3B30; }
+    .cat-alert { color: #FFB000; }
+    .cat-digest { color: #0052FF; }
+    .cat-default { color: #787878; }
     .item-desc {
       font-size: 0.75rem;
       color: #787878;
@@ -170,7 +175,26 @@
         <xsl:for-each select="/rss/channel/item">
           <div class="item">
             <div class="item-meta">
-              <span class="item-category">[<xsl:value-of select="translate(category, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/>]</span>
+              <xsl:choose>
+                <xsl:when test="category = 'ecosystem'">
+                  <span class="item-category cat-ecosystem">[ECOSYSTEM]</span>
+                </xsl:when>
+                <xsl:when test="category = 'devlog'">
+                  <span class="item-category cat-devlog">[DEVLOG]</span>
+                </xsl:when>
+                <xsl:when test="category = 'security'">
+                  <span class="item-category cat-security">[SECURITY]</span>
+                </xsl:when>
+                <xsl:when test="category = 'alert'">
+                  <span class="item-category cat-alert">[ALERT]</span>
+                </xsl:when>
+                <xsl:when test="category = 'digest'">
+                  <span class="item-category cat-digest">[DIGEST]</span>
+                </xsl:when>
+                <xsl:otherwise>
+                  <span class="item-category cat-default">[<xsl:value-of select="translate(category, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/>]</span>
+                </xsl:otherwise>
+              </xsl:choose>
               <xsl:value-of select="substring(pubDate, 6, 11)"/>
             </div>
             <div class="item-title">

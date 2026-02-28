@@ -85,21 +85,30 @@
       padding: 0.75rem 1rem 0.75rem 0;
     }
     td:first-child a {
-      color: #c8c8c8;
+      color: #0052FF;
       text-decoration: none;
       transition: color 0.2s;
     }
     td:first-child a:hover {
-      color: #0052FF;
+      color: #3380FF;
     }
     td:nth-child(2) {
       color: #787878;
       font-size: 0.625rem;
     }
     td:nth-child(3) {
-      color: #787878;
       font-size: 0.625rem;
       text-align: right;
+      font-weight: 600;
+    }
+    .priority-high {
+      color: #00C853;
+    }
+    .priority-med {
+      color: #0052FF;
+    }
+    .priority-low {
+      color: #FFB000;
     }
     .footer {
       margin-top: 0;
@@ -143,7 +152,17 @@
               <xsl:value-of select="substring(sitemap:lastmod, 1, 10)"/>
             </td>
             <td>
-              <xsl:value-of select="sitemap:priority"/>
+              <xsl:choose>
+                <xsl:when test="sitemap:priority &gt;= 0.9">
+                  <span class="priority-high"><xsl:value-of select="sitemap:priority"/></span>
+                </xsl:when>
+                <xsl:when test="sitemap:priority &gt;= 0.8">
+                  <span class="priority-med"><xsl:value-of select="sitemap:priority"/></span>
+                </xsl:when>
+                <xsl:otherwise>
+                  <span class="priority-low"><xsl:value-of select="sitemap:priority"/></span>
+                </xsl:otherwise>
+              </xsl:choose>
             </td>
           </tr>
         </xsl:for-each>
