@@ -175,6 +175,38 @@ export default async function Dashboard() {
           </div>
         )}
 
+        {/* Public API */}
+        <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mt-6">
+          <h2 className="font-mono text-sm font-bold text-[#ededed] tracking-wide mb-3">
+            PUBLIC_API
+          </h2>
+          <p className="font-mono text-xs text-[#787878] mb-3">
+            Free, CORS-open Base ecosystem data. No API key required.
+          </p>
+          <div className="bg-[#050508] border border-[#1a1f2e] p-3 overflow-x-auto">
+            <code className="font-mono text-xs text-[#0052FF]">
+              GET https://baised.dev/api/stats
+            </code>
+          </div>
+          <p className="font-mono text-[10px] text-[#444] mt-2">
+            Returns: tvl, dexVolume24h, dexVolume7d, fees24h, latestBlock, networkStatus · 5min cache
+          </p>
+          <div className="mt-3 flex gap-3">
+            <a
+              href="/feed.xml"
+              className="font-mono text-xs text-[#787878] hover:text-[#0052FF] transition-colors"
+            >
+              RSS Feed →
+            </a>
+            <a
+              href="/sitemap.xml"
+              className="font-mono text-xs text-[#787878] hover:text-[#0052FF] transition-colors"
+            >
+              Sitemap →
+            </a>
+          </div>
+        </div>
+
         {/* Footer */}
         <footer className="mt-6 text-center">
           <p className="font-mono text-xs text-[#444]">

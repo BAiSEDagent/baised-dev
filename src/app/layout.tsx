@@ -38,6 +38,11 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  alternates: {
+    types: {
+      'application/rss+xml': 'https://baised.dev/feed.xml',
+    },
+  },
 };
 
 export default function RootLayout({
