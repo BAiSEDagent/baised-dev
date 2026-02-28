@@ -31,28 +31,12 @@ export function getBaseGrants(): Grant[] {
       status: 'open',
     },
     {
-      name: 'OP Retro Funding',
-      amount: 'Variable (OP)',
-      stage: 'Public Good',
-      description: 'Rewards for public goods that benefit the Base and Superchain ecosystem.',
-      applyUrl: 'https://app.optimism.io/retropgf',
-      status: 'ongoing',
-    },
-    {
       name: 'Base Batches',
       amount: 'Up to $100K+',
       stage: 'Founder',
       description: 'Comprehensive founder program with mentorship, resources, and funding.',
       applyUrl: 'https://docs.base.org/get-started/get-funded#base-batches-the-founder-track',
       status: 'open',
-    },
-    {
-      name: 'Gitcoin Rounds',
-      amount: 'Matching pool',
-      stage: 'Any',
-      description: 'Quadratic funding rounds for Base ecosystem projects.',
-      applyUrl: 'https://explorer.gitcoin.co/',
-      status: 'ongoing',
     },
   ];
 }
