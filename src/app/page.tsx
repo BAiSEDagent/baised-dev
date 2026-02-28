@@ -2,6 +2,7 @@ import { fetchBaseChainData } from "@/lib/base-intel";
 import { fetchBaseChangelog } from "@/lib/base-changelog";
 import { fetchBaseStatus } from "@/lib/base-status";
 import { fetchBaseBlog } from "@/lib/base-blog";
+import { getBaseGrants } from "@/lib/grants";
 import { Sparkline } from "@/components/sparkline";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
@@ -408,6 +409,52 @@ export default async function CommandDeck() {
                 </a>
               </div>
             )}
+
+            {/* Grants */}
+            <div className="mt-6 pt-5 border-t border-[#1a1f2e]">
+              <h3 className="font-mono text-xs font-bold text-[#787878] tracking-wide mb-3">
+                GRANTS_&amp;_FUNDING
+              </h3>
+              <div className="space-y-2.5">
+                {getBaseGrants().map((grant) => (
+                  <a
+                    key={grant.name}
+                    href={grant.applyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="font-mono text-xs text-[#c8c8c8] group-hover:text-[#0052FF] transition-colors">
+                        {grant.name}
+                      </p>
+                      <span
+                        className={`font-mono text-[10px] px-1.5 py-0.5 ${
+                          grant.status === 'open'
+                            ? 'text-[#00C853] bg-[#00C853]/10'
+                            : grant.status === 'ongoing'
+                              ? 'text-[#0052FF] bg-[#0052FF]/10'
+                              : 'text-[#FFB000] bg-[#FFB000]/10'
+                        }`}
+                      >
+                        {grant.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <p className="font-mono text-[10px] text-[#555] mt-0.5">
+                      {grant.amount} · {grant.stage} · {grant.description}
+                    </p>
+                  </a>
+                ))}
+              </div>
+              <a
+                href="https://docs.base.org/get-started/get-funded"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block font-mono text-[10px] text-[#0052FF] hover:text-[#3380FF] mt-3 transition-colors"
+              >
+                All funding pathways →
+              </a>
+            </div>
 
             {/* Ecosystem links */}
             <div className="mt-6 pt-5 border-t border-[#1a1f2e]">
