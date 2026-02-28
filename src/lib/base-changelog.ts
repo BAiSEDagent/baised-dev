@@ -48,24 +48,29 @@ export async function fetchBaseChangelog(): Promise<ChangelogEntry[]> {
       .sort((a, b) => (b.tvl || 0) - (a.tvl || 0))
       .slice(0, 8);
 
-    // Fetch sparklines in parallel for top protocols
-    const entries = await Promise.all(
+    // Fetch Base-specific TVL + sparklines in parallel
+    const entries = (await Promise.all(
       baseProtocols.map(async (p) => {
-        const change = p.change_1d || 0;
         const slug = (p as Record<string, unknown>).slug as string || p.name.toLowerCase().replace(/\s+/g, '-');
-        const sparkline = await fetchProtocolSparkline(slug);
+        const { baseTvl, change24h, sparkline } = await fetchProtocolBaseData(slug);
+
+        // Skip if no Base TVL data
+        if (baseTvl === 0) return null;
+
         return {
           protocol: p.name,
           slug,
           category: p.category || 'Unknown',
-          tvl: formatCompact(p.tvl || 0),
-          change24h: change === 0 ? '—' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`,
-          changeDirection: (change > 0.1 ? 'up' : change < -0.1 ? 'down' : 'flat') as 'up' | 'down' | 'flat',
+          tvl: formatCompact(baseTvl),
+          change24h: change24h === 0 ? '—' : `${change24h > 0 ? '+' : ''}${change24h.toFixed(1)}%`,
+          changeDirection: (change24h > 0.1 ? 'up' : change24h < -0.1 ? 'down' : 'flat') as 'up' | 'down' | 'flat',
           url: p.url || '#',
           sparkline,
         };
       })
-    );
+    )).filter((e): e is ChangelogEntry => e !== null)
+      .sort((a, b) => parseCompact(b.tvl) - parseCompact(a.tvl))
+      .slice(0, 8);
 
     return entries;
   } catch {
@@ -74,31 +79,55 @@ export async function fetchBaseChangelog(): Promise<ChangelogEntry[]> {
 }
 
 /**
- * Fetch 7-day Base TVL history for a protocol, normalized to 0-1 for sparkline.
+ * Fetch Base-specific TVL, 24h change, and 7-day sparkline for a protocol.
  */
-async function fetchProtocolSparkline(slug: string): Promise<number[]> {
+async function fetchProtocolBaseData(slug: string): Promise<{
+  baseTvl: number;
+  change24h: number;
+  sparkline: number[];
+}> {
+  const empty = { baseTvl: 0, change24h: 0, sparkline: [] };
   try {
     const res = await fetch(`https://api.llama.fi/protocol/${slug}`, {
       next: { revalidate: 900 },
     });
-    if (!res.ok) return [];
+    if (!res.ok) return empty;
 
     const data = await res.json();
-    const baseTvl: Array<{ date: number; totalLiquidityUSD: number }> =
+    const baseTvlHistory: Array<{ date: number; totalLiquidityUSD: number }> =
       data?.chainTvls?.Base?.tvl || [];
 
-    if (baseTvl.length < 7) return [];
+    if (baseTvlHistory.length < 2) return empty;
 
-    // Last 7 data points
-    const last7 = baseTvl.slice(-7).map((d) => d.totalLiquidityUSD);
-    const min = Math.min(...last7);
-    const max = Math.max(...last7);
-    const range = max - min || 1;
+    // Current Base TVL = last data point
+    const current = baseTvlHistory[baseTvlHistory.length - 1].totalLiquidityUSD;
 
-    return last7.map((v) => (v - min) / range);
+    // 24h change: compare last vs second-to-last (daily granularity)
+    const prev = baseTvlHistory[baseTvlHistory.length - 2].totalLiquidityUSD;
+    const change24h = prev > 0 ? ((current - prev) / prev) * 100 : 0;
+
+    // Sparkline: last 7 data points normalized to 0-1
+    let sparkline: number[] = [];
+    if (baseTvlHistory.length >= 7) {
+      const last7 = baseTvlHistory.slice(-7).map((d) => d.totalLiquidityUSD);
+      const min = Math.min(...last7);
+      const max = Math.max(...last7);
+      const range = max - min || 1;
+      sparkline = last7.map((v) => (v - min) / range);
+    }
+
+    return { baseTvl: current, change24h, sparkline };
   } catch {
-    return [];
+    return empty;
   }
+}
+
+function parseCompact(s: string): number {
+  const n = parseFloat(s.replace(/[$,]/g, ''));
+  if (s.endsWith('B')) return n * 1e9;
+  if (s.endsWith('M')) return n * 1e6;
+  if (s.endsWith('K')) return n * 1e3;
+  return n;
 }
 
 function formatCompact(value: number): string {
