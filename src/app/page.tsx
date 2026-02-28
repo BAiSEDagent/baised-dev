@@ -72,7 +72,7 @@ const BUILDER_TOOLKIT = [
   {
     name: "Base Paymaster",
     desc: "Sponsor gas for your users",
-    url: "https://docs.base.org/identity/smart-wallet/guides/sponsor-gas",
+    url: "https://docs.base.org/base-account/guides/sponsor-gas",
     variant: "amber" as const,
   },
   {
@@ -174,7 +174,7 @@ export default async function CommandDeck() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-1">
+                <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
                   {feed.map((item) => (
                     <article key={item.id} className="py-2.5">
                       <p className="font-mono text-xs sm:text-sm leading-relaxed">
