@@ -79,7 +79,7 @@ const BUILDER_TOOLKIT = [
   {
     name: "Base Paymaster",
     desc: "Sponsor gas for your users",
-    url: "https://docs.base.org/base-account/guides/sponsor-gas",
+    url: "https://docs.base.org/base-account/improve-ux/sponsor-gas/paymasters",
     variant: "amber" as const,
   },
   {
