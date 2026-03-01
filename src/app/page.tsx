@@ -7,6 +7,8 @@ import { Sparkline } from "@/components/sparkline";
 import { OnchainKitBuilder } from "@/components/onchainkit-builder";
 import { BasenameResolver } from "@/components/basename-resolver";
 import { GasEstimator } from "@/components/gas-estimator";
+import { FaucetModule } from "@/components/faucet-module";
+import { AbiDecoder } from "@/components/abi-decoder";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
@@ -324,6 +326,12 @@ export default async function CommandDeck() {
               </p>
 
               <div className="space-y-5">
+                <ErrorBoundary>
+                  <FaucetModule />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <AbiDecoder />
+                </ErrorBoundary>
                 <ErrorBoundary>
                   <OnchainKitBuilder />
                 </ErrorBoundary>
