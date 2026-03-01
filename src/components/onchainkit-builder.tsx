@@ -1,22 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import sdk from '@stackblitz/sdk';
 import { COMPONENT_TEMPLATES } from '@/lib/code-templates';
 
 type ViewMode = 'component' | 'full-setup' | 'sandbox';
 type ComponentName = keyof typeof COMPONENT_TEMPLATES;
-
-const STACKBLITZ_BASE = 'https://stackblitz.com/edit';
-
-// Pre-built StackBlitz project IDs for each component
-// These are forked from a base OnchainKit Next.js template
-const STACKBLITZ_TEMPLATES: Record<string, string> = {
-  Identity: 'nextjs-onchainkit-identity',
-  Wallet: 'nextjs-onchainkit-wallet',
-  Swap: 'nextjs-onchainkit-swap',
-  Fund: 'nextjs-onchainkit-fund',
-  Transaction: 'nextjs-onchainkit-transaction',
-};
 
 export function OnchainKitBuilder() {
   const [selected, setSelected] = useState<ComponentName>('Identity');
@@ -37,17 +26,48 @@ export function OnchainKitBuilder() {
     }
   }, [selected, viewMode]);
 
+  // C-1 + C-2: Use StackBlitz SDK to create real projects from our templates
   const handleOpenSandbox = useCallback(() => {
-    const projectId = STACKBLITZ_TEMPLATES[selected];
-    window.open(
-      `${STACKBLITZ_BASE}/${projectId}?file=app%2Fpage.tsx&terminal=dev`,
-      '_blank',
-      'noopener,noreferrer'
-    );
-    console.log('[analytics] sandbox_opened', { component: selected });
-  }, [selected]);
+    const files: Record<string, string> = {};
+    for (const file of template.files) {
+      files[file.filename] = file.content;
+    }
+    // Add package.json
+    files['package.json'] = JSON.stringify({
+      name: `onchainkit-${selected.toLowerCase()}-demo`,
+      version: '0.1.0',
+      private: true,
+      scripts: { dev: 'next dev', build: 'next build', start: 'next start' },
+      dependencies: template.dependencies,
+    }, null, 2);
+    // Add minimal globals.css (L-1 fix)
+    files['app/globals.css'] = `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n`;
+    // Add tailwind + postcss config
+    files['tailwind.config.ts'] = `import type { Config } from 'tailwindcss';\nconst config: Config = { content: ['./app/**/*.{ts,tsx}'], theme: { extend: {} }, plugins: [] };\nexport default config;`;
+    files['postcss.config.js'] = `module.exports = { plugins: { tailwindcss: {}, autoprefixer: {} } };`;
+    files['tsconfig.json'] = JSON.stringify({
+      compilerOptions: {
+        target: 'es5', lib: ['dom', 'dom.iterable', 'esnext'], allowJs: true, skipLibCheck: true,
+        strict: true, noEmit: true, esModuleInterop: true, module: 'esnext', moduleResolution: 'bundler',
+        resolveJsonModule: true, isolatedModules: true, jsx: 'preserve', incremental: true,
+        plugins: [{ name: 'next' }], paths: { '@/*': ['./*'] },
+      },
+      include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+      exclude: ['node_modules'],
+    }, null, 2);
+    files['next.config.mjs'] = `/** @type {import('next').NextConfig} */\nconst nextConfig = {};\nexport default nextConfig;`;
 
-  // Get the simple component-only code (backward compat with old view)
+    sdk.openProject({
+      title: `OnchainKit ${selected} — Base`,
+      description: template.description,
+      template: 'node',
+      files,
+    }, { openFile: 'app/page.tsx', newWindow: true });
+
+    setSandboxLoaded(true);
+    console.log('[analytics] sandbox_opened', { component: selected });
+  }, [selected, template]);
+
   const getComponentCode = (): string => {
     const pageFile = template.files.find(f => f.filename === 'app/page.tsx');
     return pageFile?.content || '';
@@ -111,7 +131,7 @@ export function OnchainKitBuilder() {
 
       {/* VIEW: Component Only */}
       {viewMode === 'component' && (
-        <div className="relative">
+        <div className="relative" role="tabpanel" aria-label="Component code">
           <pre className="code-block bg-[#0a0c12] border border-[#1a2a3a] p-3 overflow-x-auto text-[10px] leading-relaxed max-h-[300px]">
             <code className="text-[#c8c8c8]">{getComponentCode()}</code>
           </pre>
@@ -126,7 +146,7 @@ export function OnchainKitBuilder() {
 
       {/* VIEW: Full Setup */}
       {viewMode === 'full-setup' && (
-        <div className="space-y-3">
+        <div className="space-y-3" role="tabpanel" aria-label="Full setup files">
           {template.files.map((file) => (
             <div key={file.filename} className="relative">
               <div className="flex items-center justify-between bg-[#0f1218] border border-[#1a2a3a] border-b-0 px-3 py-1.5">
@@ -173,8 +193,7 @@ export function OnchainKitBuilder() {
 
       {/* VIEW: Live Sandbox */}
       {viewMode === 'sandbox' && (
-        <div className="space-y-3">
-          {/* StackBlitz Embed */}
+        <div className="space-y-3" role="tabpanel" aria-label="Live sandbox">
           <div className="relative border border-[#1a2a3a] bg-[#0a0c12]">
             {!sandboxLoaded && (
               <div className="flex flex-col items-center justify-center py-8 space-y-3">
@@ -182,16 +201,13 @@ export function OnchainKitBuilder() {
                   Launch a live editor with {selected} pre-configured
                 </p>
                 <button
-                  onClick={() => {
-                    handleOpenSandbox();
-                    setSandboxLoaded(true);
-                  }}
+                  onClick={handleOpenSandbox}
                   className="font-mono text-xs px-4 py-2 bg-[#0052FF] text-white hover:bg-[#0040CC] transition-colors"
                 >
                   ⚡ Open in StackBlitz
                 </button>
                 <p className="font-mono text-[10px] text-[#444]">
-                  Opens in new tab · Edit code · Live preview · Deploy to Vercel
+                  Opens in new tab · Full Next.js project · Edit + preview live
                 </p>
               </div>
             )}
@@ -214,7 +230,6 @@ export function OnchainKitBuilder() {
             )}
           </div>
 
-          {/* Quick Setup Instructions */}
           <div className="p-3 bg-[#0a0c12] border border-[#1a2a3a]">
             <p className="font-mono text-[10px] text-[#ededed] font-bold mb-2">
               Quick Start (from sandbox):

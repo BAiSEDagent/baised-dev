@@ -18,11 +18,29 @@ const cache = new Map<string, RateLimitEntry>();
 const WINDOW_MS = 60000; // 1 minute
 const MAX_REQUESTS = 10;
 
+// H-1: Periodic cleanup to prevent unbounded memory growth
+let lastCleanup = Date.now();
+const CLEANUP_INTERVAL_MS = 60000; // Clean every 60s
+
+function cleanupExpired() {
+  const now = Date.now();
+  if (now - lastCleanup < CLEANUP_INTERVAL_MS) return;
+  lastCleanup = now;
+
+  cache.forEach((entry, key) => {
+    if (now > entry.resetAt) {
+      cache.delete(key);
+    }
+  });
+}
+
 export function checkRateLimit(identifier: string): RateLimitResult {
+  cleanupExpired();
+
   const now = Date.now();
   const entry = cache.get(identifier);
 
-  // Clean up expired entries
+  // Clean up expired entry for this identifier
   if (entry && now > entry.resetAt) {
     cache.delete(identifier);
   }

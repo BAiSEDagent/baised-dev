@@ -67,7 +67,9 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplate> = {
       {
         filename: 'app/page.tsx',
         language: 'tsx',
-        content: `import { Identity, Name, Avatar, Badge, Address } from '@coinbase/onchainkit/identity';
+        content: `'use client';
+
+import { Identity, Name, Avatar, Badge, Address } from '@coinbase/onchainkit/identity';
 
 export default function Home() {
   return (
@@ -245,7 +247,7 @@ const contracts = [
     ] as const,
     functionName: 'transfer',
     args: [
-      '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', // recipient
+      '0xYOUR_RECIPIENT_ADDRESS_HERE', // ← replace with recipient address
       BigInt(1000000), // 1 USDC (6 decimals)
     ],
   },

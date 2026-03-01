@@ -4,6 +4,19 @@ import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 
 export const runtime = 'edge';
 
+// M-5: CORS preflight handler
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': 'https://baised.dev',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
 // In-memory cache for 4byte lookups
 interface CacheEntry {
   signatures: string[];

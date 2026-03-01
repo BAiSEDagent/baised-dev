@@ -116,10 +116,25 @@ export function AbiDecoder() {
       {/* Decoded Output */}
       {result && result.success && (
         <div
-          className="mt-3 p-3 bg-[#0a0c12] border border-[#1a2a3a]"
+          className="mt-3 p-3 bg-[#0a0c12] border border-[#1a2a3a] relative"
           role="status"
           aria-live="polite"
         >
+          <button
+            onClick={async () => {
+              const text = `${result.functionName}(${result.params?.map((p, i) => `arg[${i}]: ${formatParam(p)}`).join(', ') ?? ''})`;
+              try {
+                await navigator.clipboard.writeText(text);
+                console.log('[analytics] abi_result_copied');
+              } catch {
+                alert('Copy failed.');
+              }
+            }}
+            className="absolute top-2 right-2 font-mono text-[10px] px-2 py-0.5 text-[#787878] hover:text-[#00C853] border border-[#2a3a4a] hover:border-[#00C853] transition-colors"
+            aria-label="Copy decoded result"
+          >
+            COPY
+          </button>
           <p className="font-mono text-xs text-[#00C853] font-bold mb-2">
             {result.functionName}
           </p>

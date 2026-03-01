@@ -23,7 +23,8 @@ export function FaucetModule() {
     }
 
     // Open CDP faucet in new tab with pre-filled address
-    const faucetUrl = `https://portal.cdp.coinbase.com/products/faucet?network=base-sepolia&address=${sanitized}`;
+    // H-2: encodeURIComponent to prevent URL injection
+    const faucetUrl = `https://portal.cdp.coinbase.com/products/faucet?network=base-sepolia&address=${encodeURIComponent(sanitized)}`;
     window.open(faucetUrl, '_blank', 'noopener,noreferrer');
 
     // Analytics

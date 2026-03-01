@@ -122,11 +122,25 @@ export function BasenameResolver() {
       {/* Output */}
       {result && (
         <div
-          className="mt-3 p-2.5 bg-[#0a0c12] border border-[#1a2a3a]"
-          role="status" // M-4: Accessibility
+          className="mt-3 p-2.5 bg-[#0a0c12] border border-[#1a2a3a] relative"
+          role="status"
           aria-live="polite"
         >
-          <p className="font-mono text-xs text-[#00C853] break-all">{result}</p>
+          <p className="font-mono text-xs text-[#00C853] break-all pr-12">{result}</p>
+          <button
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(result);
+                console.log('[analytics] basename_result_copied');
+              } catch {
+                alert('Copy failed.');
+              }
+            }}
+            className="absolute top-2 right-2 font-mono text-[10px] px-2 py-0.5 text-[#787878] hover:text-[#00C853] border border-[#2a3a4a] hover:border-[#00C853] transition-colors"
+            aria-label="Copy result"
+          >
+            COPY
+          </button>
         </div>
       )}
 
