@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
 
     try {
       // Type assertion needed because signature is dynamic at runtime
-      const abi = parseAbi([`function ${signature}`] as any);
+      const abi = parseAbi([`function ${signature}`] as readonly string[]);
       const decoded = decodeFunctionData({
         abi,
         data: calldata as `0x${string}`,
@@ -126,13 +126,14 @@ export async function POST(req: NextRequest) {
           success: true,
           selector,
           functionName: decoded.functionName,
-          params: decoded.args,
+          params: decoded.args as unknown[],
           signature,
           alternativeSignatures: signatures.slice(1, 3), // Show up to 2 alternatives
         },
         { headers: { 'Access-Control-Allow-Origin': 'https://baised.dev' } }
       );
-    } catch (decodeError) {
+    } catch {
+      // Decode failed - return error
       return NextResponse.json(
         {
           success: false,

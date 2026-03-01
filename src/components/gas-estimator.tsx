@@ -19,6 +19,7 @@ export function GasEstimator() {
     fetchGasData();
     const interval = setInterval(fetchGasData, 120000); // L-2: Refresh every 2 min (Base gas changes quickly)
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchGasData = async () => {

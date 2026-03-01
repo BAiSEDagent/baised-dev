@@ -6,7 +6,7 @@ interface DecodedResult {
   success: boolean;
   selector: string;
   functionName: string;
-  params: any[] | null;
+  params: unknown[] | null;
   signature?: string;
   alternativeSignatures?: string[];
   error?: string;
@@ -57,7 +57,7 @@ export function AbiDecoder() {
     }
   };
 
-  const formatParam = (param: any, index: number): string => {
+  const formatParam = (param: unknown): string => {
     if (param === null || param === undefined) return 'null';
     
     // Handle BigInt
@@ -67,7 +67,7 @@ export function AbiDecoder() {
     
     // Handle arrays
     if (Array.isArray(param)) {
-      return `[${param.map((p, i) => formatParam(p, i)).join(', ')}]`;
+      return `[${param.map((p) => formatParam(p)).join(', ')}]`;
     }
     
     // Handle objects
@@ -129,7 +129,7 @@ export function AbiDecoder() {
               {result.params.map((param, idx) => (
                 <p key={idx} className="font-mono text-xs text-[#c8c8c8]">
                   <span className="text-[#787878]">arg[{idx}]:</span>{' '}
-                  <span className="text-[#ededed] break-all">{formatParam(param, idx)}</span>
+                  <span className="text-[#ededed] break-all">{formatParam(param)}</span>
                 </p>
               ))}
             </div>
