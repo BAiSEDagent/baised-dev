@@ -5,13 +5,13 @@ import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 export const runtime = 'edge';
 
 // In-memory cache for 4byte lookups
-const signatureCache = new Map<string, string[]>();
-const CACHE_TTL_MS = 3600000; // 1 hour
-
 interface CacheEntry {
   signatures: string[];
   timestamp: number;
 }
+
+const signatureCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 3600000; // 1 hour
 
 export async function POST(req: NextRequest) {
   // Rate limiting
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     const selector = calldata.slice(0, 10); // 0x + 8 hex chars
 
     // Check cache first
-    const cachedEntry = signatureCache.get(selector) as CacheEntry | undefined;
+    const cachedEntry = signatureCache.get(selector);
     const now = Date.now();
     
     let signatures: string[];
@@ -86,10 +86,10 @@ export async function POST(req: NextRequest) {
         }
 
         const data = await fourbyteRes.json();
-        signatures = data.results?.map((r: any) => r.text_signature) || [];
+        signatures = data.results?.map((r: { text_signature: string }) => r.text_signature) || [];
 
         // Cache result
-        signatureCache.set(selector, { signatures, timestamp: now } as any);
+        signatureCache.set(selector, { signatures, timestamp: now } as CacheEntry);
         console.log('[decode-calldata] 4byte_lookup', { selector, count: signatures.length });
       } catch (fourbyteError) {
         console.warn('[decode-calldata] 4byte_unavailable', fourbyteError);
