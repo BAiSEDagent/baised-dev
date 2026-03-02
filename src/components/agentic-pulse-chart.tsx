@@ -15,9 +15,9 @@ import {
 interface AgenticPulseChartProps {
   data: Array<{
     day: string;
-    daily_txs: number;
-    ma_7d_txs: number;
-    cumulative_txs: number;
+    daily_trades: number;
+    ma_7d_trades: number;
+    cumulative_trades: number;
   }>;
 }
 
@@ -99,28 +99,28 @@ export function AgenticPulseChart({ data }: AgenticPulseChartProps) {
         <Area
           yAxisId="right"
           type="monotone"
-          dataKey="cumulative_txs"
+          dataKey="cumulative_trades"
           stroke="#0052FF"
           strokeWidth={1}
           strokeOpacity={0.3}
           fill="url(#cumulGrad)"
           dot={false}
-          name="Cumulative Txs"
+          name="Cumulative Trades"
         />
         <Line
           yAxisId="left"
           type="monotone"
-          dataKey="daily_txs"
+          dataKey="daily_trades"
           stroke="#0052FF"
           strokeWidth={2}
           dot={false}
           activeDot={{ r: 3, fill: "#0052FF", stroke: "#ededed", strokeWidth: 1 }}
-          name="Daily Txs"
+          name="Daily Trades"
         />
         <Line
           yAxisId="left"
           type="monotone"
-          dataKey="ma_7d_txs"
+          dataKey="ma_7d_trades"
           stroke="#FF007A"
           strokeWidth={2}
           strokeDasharray="4 2"

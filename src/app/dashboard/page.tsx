@@ -82,8 +82,8 @@ export default async function AgentActivityPage() {
   const updatedAt = new Date().toUTCString();
 
   // Derive KPIs — use Number() to guard against Dune returning numeric fields as strings
-  const totalTxs30d = leaderboard?.reduce((sum, r) => sum + Number(r.txs_30d ?? 0), 0) ?? 0;
-  const totalUsers30d = leaderboard?.reduce((sum, r) => sum + Number(r.users_30d ?? 0), 0) ?? 0;
+  const totalTxs30d = leaderboard?.reduce((sum, r) => sum + Number(r.dex_trades_30d ?? 0), 0) ?? 0;
+  const totalUsers30d = leaderboard?.reduce((sum, r) => sum + Number(r.unique_traders_30d ?? 0), 0) ?? 0;
   const virtualTotalVol =
     virtualDex && virtualDex.length > 0
       ? virtualDex.slice(-30).reduce((sum, r) => sum + Number(r.volume_usd ?? 0), 0)
@@ -128,14 +128,14 @@ export default async function AgentActivityPage() {
             sub="Registered agent identities"
           />
           <StatCard
-            label="Agentic Txs (30d)"
+            label="DEX Trades (30d)"
             value={formatCompact(totalTxs30d || null)}
-            sub="Tracked projects"
+            sub="Tracked agent tokens"
           />
           <StatCard
-            label="Unique Users (30d)"
+            label="Unique Traders (30d)"
             value={formatCompact(totalUsers30d || null)}
-            sub="Cross-project"
+            sub="Cross-token"
           />
           <StatCard
             label="VIRTUAL Vol (30d)"
@@ -144,15 +144,15 @@ export default async function AgentActivityPage() {
           />
         </div>
 
-        {/* ── AGENTIC_PULSE ── */}
-        <SectionDivider label="AGENTIC_PULSE" />
+        {/* ── AGENTIC_DEX_ACTIVITY ── */}
+        <SectionDivider label="AGENTIC_DEX_ACTIVITY" />
 
         <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
           <h2 className="font-mono text-xs font-bold text-[#ededed] tracking-wider mb-1 uppercase">
-            DAILY_AGENTIC_TRANSACTIONS_90D
+            DAILY_AGENTIC_DEX_TRADES_90D
           </h2>
           <p className="font-mono text-[10px] text-[#787878] mb-4">
-            Daily transactions and 7-day moving average across tracked agentic projects
+            Daily DEX trades and 7-day moving average across tracked agent tokens
           </p>
           {pulse && pulse.length > 0 ? (
             <AgenticPulseChart data={pulse} />
@@ -163,7 +163,7 @@ export default async function AgentActivityPage() {
           )}
           <div className="flex items-center gap-4 mt-3 flex-wrap">
             {[
-              { label: "DAILY TXS", color: "#0052FF" },
+              { label: "DAILY TRADES", color: "#0052FF" },
               { label: "7D MA", color: "#FF007A", dashed: true },
               { label: "CUMULATIVE", color: "#0052FF", faded: true },
             ].map((c) => (
@@ -186,17 +186,20 @@ export default async function AgentActivityPage() {
             ))}
           </div>
           <p className="font-mono text-[10px] text-[#444] mt-2">
-            Source: Dune Analytics · Tracked projects: Virtuals Protocol · AIXBT · VADER · base.dex.trades
+            Tracks DEX swap activity for 6 agent tokens: Virtuals (VIRTUAL), AIXBT, Venice (VVV), Clanker (CLANK), Ribbita (TIBBIR), VADER · base.dex.trades
           </p>
         </div>
 
-        {/* ── PROJECT_LEADERBOARD ── */}
-        <SectionDivider label="PROJECT_LEADERBOARD" />
+        {/* ── AGENT_TOKEN_DEX_LEADERBOARD ── */}
+        <SectionDivider label="AGENT_TOKEN_DEX_LEADERBOARD_30D" />
 
         <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
-          <h2 className="font-mono text-xs font-bold text-[#ededed] tracking-wider mb-4 uppercase">
-            AGENT_PROJECTS_30D
+          <h2 className="font-mono text-xs font-bold text-[#ededed] tracking-wider mb-1 uppercase">
+            AGENT_TOKEN_DEX_LEADERBOARD_30D
           </h2>
+          <p className="font-mono text-[10px] text-[#787878] mb-4">
+            Ranked by DEX trading activity (55% trades + 45% unique traders). Measures token market activity, not protocol interactions.
+          </p>
           {sortedLeaderboard.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full font-mono text-xs">
@@ -205,16 +208,16 @@ export default async function AgentActivityPage() {
                     <th className="pb-2 pr-2 font-medium tracking-wider w-6">#</th>
                     <th className="pb-2 pr-3 font-medium tracking-wider">PROJECT</th>
                     <th className="pb-2 pr-3 font-medium tracking-wider">CATEGORY</th>
-                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">TXS 30D</th>
-                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">USERS 30D</th>
+                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">DEX TRADES 30D</th>
+                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">TRADERS 30D</th>
                     <th className="pb-2 pr-3 font-medium text-right tracking-wider">VOL 30D</th>
-                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">WoW TXS %</th>
+                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">WoW VOL %</th>
                     <th className="pb-2 font-medium tracking-wider">ACTIVITY SCORE</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sortedLeaderboard.map((row, idx) => {
-                    const wow = Number(row.wow_txs_pct ?? 0);
+                    const wow = Number(row.wow_vol_pct ?? 0);
                     const wowDisplay =
                       wow === 0 ? "—" : `${wow > 0 ? "+" : ""}${wow.toFixed(1)}%`;
                     const wowColor =
@@ -234,10 +237,10 @@ export default async function AgentActivityPage() {
                           <CategoryBadge category={row.category} />
                         </td>
                         <td className="py-2 pr-3 text-[#ededed] text-right tabular-nums">
-                          {formatCompact(Number(row.txs_30d ?? 0) || null)}
+                          {formatCompact(Number(row.dex_trades_30d ?? 0) || null)}
                         </td>
                         <td className="py-2 pr-3 text-[#ededed] text-right tabular-nums">
-                          {formatCompact(Number(row.users_30d ?? 0) || null)}
+                          {formatCompact(Number(row.unique_traders_30d ?? 0) || null)}
                         </td>
                         <td className="py-2 pr-3 text-[#ededed] text-right tabular-nums">
                           {formatCompact(Number(row.volume_30d_usd ?? 0) || null, "$")}
@@ -389,6 +392,48 @@ export default async function AgentActivityPage() {
               </p>
               <p className="text-[#444] mt-1">
                 More projects added as contract addresses are verified.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── DATA_NOTES ── */}
+        <SectionDivider label="DATA_NOTES" />
+
+        <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
+          <div className="space-y-3 font-mono text-xs leading-relaxed max-w-2xl">
+            <p className="text-[#787878]">
+              This dashboard measures{" "}
+              <span className="text-[#ededed]">DEX token trading activity</span>{" "}
+              as a proxy for ecosystem engagement.
+            </p>
+            <p className="text-[#787878]">
+              It does <span className="text-[#ededed]">NOT</span> yet measure protocol-level contract
+              interactions{" "}
+              <span className="text-[#444]">(coming soon)</span>.
+            </p>
+            <div className="pt-1">
+              <p className="text-[#787878]">
+                <span className="text-[#ededed]">Tracked tokens:</span>{" "}
+                VIRTUAL · AIXBT · VVV · CLANK · TIBBIR · VADER
+              </p>
+              <p className="text-[#787878] mt-1">
+                <span className="text-[#ededed]">Missing:</span>{" "}
+                Bankr (no token), CLAWD, AWE, FAI, Spectral (addresses unverified)
+              </p>
+              <p className="text-[#787878] mt-1">
+                <span className="text-[#ededed]">ERC-8004:</span>{" "}
+                Registry query pending — contract address verification in progress
+              </p>
+            </div>
+            <div className="pt-2 border-t border-[#1a2a3a] space-y-1">
+              <p className="text-[#444]">
+                For protocol-level metrics see:{" "}
+                <span className="text-[#787878]">dune.com/ax1research/base-agentic-ecosystem</span>
+              </p>
+              <p className="text-[#444]">
+                For agent mindshare:{" "}
+                <span className="text-[#787878]">agents.cookie.fun</span>
               </p>
             </div>
           </div>

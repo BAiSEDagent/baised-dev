@@ -160,23 +160,23 @@ export interface VirtualDexRow {
 export interface AgentLeaderboardRow {
   project: string;
   category: string;
-  txs_30d: number;
-  users_30d: number;
+  dex_trades_30d: number;
+  unique_traders_30d: number;
   volume_30d_usd: number;
-  txs_7d: number;
-  users_7d: number;
-  wow_txs_pct: number;
+  dex_trades_7d: number;
+  unique_traders_7d: number;
+  wow_vol_pct: number;
   activity_score: number;
 }
 
 export interface AgenticPulseRow {
   day: string;
-  daily_txs: number;
-  daily_users: number;
+  daily_trades: number;
+  daily_traders: number;
   daily_volume_usd: number;
-  ma_7d_txs: number;
-  ma_7d_users: number;
-  cumulative_txs: number;
+  ma_7d_trades: number;
+  ma_7d_traders: number;
+  cumulative_trades: number;
 }
 
 export async function fetchERC8004Registrations(): Promise<ERC8004Row[] | null> {
@@ -188,9 +188,9 @@ export async function fetchVirtualDexActivity(): Promise<VirtualDexRow[] | null>
 }
 
 export async function fetchAgentLeaderboard(): Promise<AgentLeaderboardRow[] | null> {
-  return fetchDuneQuery<AgentLeaderboardRow>(6767959);
+  return fetchDuneQuery<AgentLeaderboardRow>(6768006);
 }
 
 export async function fetchAgenticPulse(): Promise<AgenticPulseRow[] | null> {
-  return fetchDuneQuery<AgenticPulseRow>(6767960);
+  return fetchDuneQuery<AgenticPulseRow>(6768008);
 }
