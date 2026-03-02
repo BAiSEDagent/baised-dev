@@ -141,3 +141,56 @@ export function formatCompact(
   if (n >= 1e3) return `${prefix}${Math.round(n / 1000)}k`;
   return `${prefix}${n.toLocaleString()}`;
 }
+
+// ── Agent Activity Queries ──────────────────────────────────────────────────
+
+export interface ERC8004Row {
+  day: string;
+  new_registrations: number;
+  cumulative_agents: number;
+}
+
+export interface VirtualDexRow {
+  day: string;
+  volume_usd: number;
+  trades: number;
+  unique_traders: number;
+}
+
+export interface AgentLeaderboardRow {
+  project: string;
+  category: string;
+  txs_30d: number;
+  users_30d: number;
+  volume_30d_usd: number;
+  txs_7d: number;
+  users_7d: number;
+  wow_txs_pct: number;
+  activity_score: number;
+}
+
+export interface AgenticPulseRow {
+  day: string;
+  daily_txs: number;
+  daily_users: number;
+  daily_volume_usd: number;
+  ma_7d_txs: number;
+  ma_7d_users: number;
+  cumulative_txs: number;
+}
+
+export async function fetchERC8004Registrations(): Promise<ERC8004Row[] | null> {
+  return fetchDuneQuery<ERC8004Row>(6767957);
+}
+
+export async function fetchVirtualDexActivity(): Promise<VirtualDexRow[] | null> {
+  return fetchDuneQuery<VirtualDexRow>(6767958);
+}
+
+export async function fetchAgentLeaderboard(): Promise<AgentLeaderboardRow[] | null> {
+  return fetchDuneQuery<AgentLeaderboardRow>(6767959);
+}
+
+export async function fetchAgenticPulse(): Promise<AgenticPulseRow[] | null> {
+  return fetchDuneQuery<AgenticPulseRow>(6767960);
+}

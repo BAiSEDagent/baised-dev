@@ -127,12 +127,6 @@ export default async function CommandDeck() {
               href="/dashboard"
               className="font-mono text-xs text-[#787878] hover:text-[#ededed] transition-colors uppercase tracking-wider"
             >
-              DASHBOARD
-            </Link>
-            <Link
-              href="/agents"
-              className="font-mono text-xs text-[#787878] hover:text-[#ededed] transition-colors uppercase tracking-wider"
-            >
               AGENTS
             </Link>
           </div>

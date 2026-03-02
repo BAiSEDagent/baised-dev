@@ -7,9 +7,13 @@ import {
   fetchContractDeployments,
   formatCompact,
 } from "@/lib/dune";
+import { fetchBaseChainData, fetchBaseTVLHistory } from "@/lib/base-intel";
+import { fetchBaseChangelog } from "@/lib/base-changelog";
 import { WalletsChart } from "@/components/wallets-chart";
 import { CrossChainChart } from "@/components/crosschain-chart";
 import { ContractsChart } from "@/components/contracts-chart";
+import { TVLChart } from "@/components/tvl-chart";
+import { Sparkline } from "@/components/sparkline";
 import Link from "next/link";
 
 export const revalidate = 3600;
@@ -63,7 +67,7 @@ function protocolColor(project: string): string {
 }
 
 export default async function AnalyticsPage() {
-  const [pulse, dex, wallets, marketShare, crossChain, deployments] =
+  const [pulse, dex, wallets, marketShare, crossChain, deployments, chainData, tvlHistory, protocols] =
     await Promise.all([
       fetchPulseCounters(),
       fetchDexCounters(),
@@ -71,6 +75,9 @@ export default async function AnalyticsPage() {
       fetchDexMarketShare(),
       fetchCrossChainDex(),
       fetchContractDeployments(),
+      fetchBaseChainData(),
+      fetchBaseTVLHistory(),
+      fetchBaseChangelog(),
     ]);
 
   const updatedAt = new Date().toUTCString();
@@ -89,7 +96,7 @@ export default async function AnalyticsPage() {
               href="/dashboard"
               className="font-mono text-xs text-[#787878] hover:text-[#0052FF] transition-colors"
             >
-              Dashboard →
+              Agent Activity →
             </Link>
             <Link
               href="/"
@@ -329,6 +336,115 @@ export default async function AnalyticsPage() {
             Source: Dune Analytics · base.creation_traces · Updated hourly
           </p>
         </div>
+
+        {/* ── DEFI FUNDAMENTALS ── */}
+        <SectionDivider label="DEFI_FUNDAMENTALS" />
+
+        {/* KPI Row: TVL | Fees 24h | DEX Volume */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+          <StatCard
+            label="Total Value Locked"
+            value={chainData.tvl}
+            sub="Source: DeFiLlama"
+          />
+          <StatCard
+            label="Fees Generated (24h)"
+            value={chainData.fees24h}
+            sub="Source: DeFiLlama"
+          />
+          <StatCard
+            label="DEX Volume (24h)"
+            value={chainData.dexVolume24h}
+            sub="Source: DeFiLlama"
+          />
+        </div>
+
+        {/* TVL 30D Chart */}
+        <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
+          <h2 className="font-mono text-xs font-bold text-[#ededed] tracking-wider mb-1 uppercase">
+            TVL_30D
+          </h2>
+          {tvlHistory.length > 0 ? (
+            <TVLChart data={tvlHistory} />
+          ) : (
+            <p className="font-mono text-sm text-[#787878] py-8 text-center">
+              Data unavailable
+            </p>
+          )}
+          <p className="font-mono text-[10px] text-[#444] mt-3">
+            Source: DeFiLlama · Values in $M · Updated every 15 min
+          </p>
+        </div>
+
+        {/* Top Protocols Table */}
+        {protocols.length > 0 && (
+          <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
+            <h2 className="font-mono text-xs font-bold text-[#ededed] tracking-wider mb-4 uppercase">
+              TOP_PROTOCOLS
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full font-mono text-xs">
+                <thead>
+                  <tr className="text-[#787878] text-left">
+                    <th className="pb-2 pr-3 font-medium tracking-wider">PROTOCOL</th>
+                    <th className="pb-2 pr-3 font-medium tracking-wider">TYPE</th>
+                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">TVL</th>
+                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">7D</th>
+                    <th className="pb-2 font-medium text-right tracking-wider">24H</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {protocols.map((entry) => (
+                    <tr key={entry.protocol} className="border-t border-[#1a1f2e]/50">
+                      <td className="py-2 pr-3">
+                        <a
+                          href={entry.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#c8c8c8] hover:text-[#0052FF] transition-colors"
+                        >
+                          {entry.protocol}
+                        </a>
+                      </td>
+                      <td className="py-2 pr-3 text-[#787878]">{entry.category}</td>
+                      <td className="py-2 pr-3 text-[#ededed] text-right tabular-nums">
+                        {entry.tvl}
+                      </td>
+                      <td className="py-2 pr-3 text-right">
+                        {entry.sparkline.length > 0 && (
+                          <Sparkline
+                            data={entry.sparkline}
+                            color={
+                              entry.changeDirection === "up"
+                                ? "#00C853"
+                                : entry.changeDirection === "down"
+                                ? "#FF3B30"
+                                : "#787878"
+                            }
+                          />
+                        )}
+                      </td>
+                      <td
+                        className={`py-2 text-right tabular-nums ${
+                          entry.changeDirection === "up"
+                            ? "text-[#00C853]"
+                            : entry.changeDirection === "down"
+                            ? "text-[#FF3B30]"
+                            : "text-[#787878]"
+                        }`}
+                      >
+                        {entry.change24h}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="font-mono text-[10px] text-[#444] mt-3">
+              Source: DeFiLlama · Top Base protocols by TVL · Excludes CEXs
+            </p>
+          </div>
+        )}
 
         {/* ── AGENT API ── */}
         <SectionDivider label="AGENT_API" />
