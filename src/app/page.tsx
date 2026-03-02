@@ -252,17 +252,7 @@ export default async function CommandDeck() {
                     tagColor: "#34d399",
                     status: "PENDING CLAIM",
                     statusColor: "#f5c518",
-                  },
-                  {
-                    name: "Polygent Pro War Room",
-                    desc: "5-tab Polymarket arb trading terminal. Live arb scanner, order execution with $50 hard cap, intel dashboard.",
-                    url: "https://polygent.market",
-                    source: "https://github.com/BAiSEDagent/polygent-pro",
-                    tag: "TRADING",
-                    tagColor: "#fb923c",
-                    status: "LIVE",
-                    statusColor: "#4ade80",
-                  },
+                  }
                 ].map((p) => (
                   <div key={p.name} className="p-3.5 border border-[#1a2a3a] bg-[#080a10] hover:border-[#1e3a5f] transition-colors">
                     <div className="flex items-start justify-between gap-2 mb-1.5">
