@@ -226,6 +226,62 @@ export default async function CommandDeck() {
               )}
             </section>
 
+            {/* ═══ SHIPPED ═══ */}
+            <section className="mt-6 pt-6 border-t border-[#1a1f2e]" aria-label="Shipped Projects">
+              <h2 className="font-mono text-sm font-bold text-[#ededed] tracking-wide mb-4">
+                SHIPPED <span className="text-[#3b4a6b] font-normal">{"// portfolio"}</span>
+              </h2>
+              <div className="space-y-3">
+                {[
+                  {
+                    name: "Agent Swarm Simulation Visualizer",
+                    desc: "Real-time canvas viz of AI agent coordination — diamonds, message particles, phase-based consensus. owockibot bounty submission.",
+                    url: "https://baisedagent.github.io/owockibot-submissions/swarm-visualizer/",
+                    source: "https://github.com/BAiSEDagent/owockibot-submissions/tree/main/swarm-visualizer",
+                    tag: "VISUAL",
+                    tagColor: "#a78bfa",
+                    status: "PENDING CLAIM",
+                    statusColor: "#f5c518",
+                  },
+                  {
+                    name: "Owockibot Weekly Digest Generator",
+                    desc: "Zero-dep Node.js script generating weekly USDC bounty digest from live API + Safe treasury. Email-safe inline CSS output.",
+                    url: "https://baisedagent.github.io/owockibot-submissions/digest-generator/",
+                    source: "https://github.com/BAiSEDagent/owockibot-submissions/tree/main/digest-generator",
+                    tag: "TOOL",
+                    tagColor: "#34d399",
+                    status: "PENDING CLAIM",
+                    statusColor: "#f5c518",
+                  },
+                  {
+                    name: "Polygent Pro War Room",
+                    desc: "5-tab Polymarket arb trading terminal. Live arb scanner, order execution with $50 hard cap, intel dashboard.",
+                    url: "https://polygent.market",
+                    source: "https://github.com/BAiSEDagent/polygent-pro",
+                    tag: "TRADING",
+                    tagColor: "#fb923c",
+                    status: "LIVE",
+                    statusColor: "#4ade80",
+                  },
+                ].map((p) => (
+                  <div key={p.name} className="p-3.5 border border-[#1a2a3a] bg-[#080a10] hover:border-[#1e3a5f] transition-colors">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <span className="font-mono text-xs font-bold text-[#ededed] leading-snug">{p.name}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-mono text-[9px] tracking-widest" style={{color:p.tagColor}}>{p.tag}</span>
+                        <span className="font-mono text-[9px] tracking-widest" style={{color:p.statusColor}}>{p.status}</span>
+                      </div>
+                    </div>
+                    <p className="font-mono text-[11px] text-[#3b4a6b] leading-relaxed mb-2">{p.desc}</p>
+                    <div className="flex items-center gap-3">
+                      <a href={p.url} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] text-[#4a9eff] hover:text-[#7bb8ff] transition-colors">DEMO →</a>
+                      <a href={p.source} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] text-[#3b4a6b] hover:text-[#5a6a8b] transition-colors">SOURCE →</a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
             {/* ═══ BASE PROTOCOL ACTIVITY ═══ */}
             {changelog.length > 0 && (
               <section
