@@ -6,6 +6,7 @@ export async function GET() {
 
   const routes = [
     { url: baseUrl, priority: 1.0 },
+    { url: `${baseUrl}/analytics`, priority: 0.9 },
     { url: `${baseUrl}/agents`, priority: 0.9 },
     { url: `${baseUrl}/digest`, priority: 0.8 },
     { url: `${baseUrl}/search`, priority: 0.7 },

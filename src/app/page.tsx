@@ -109,7 +109,36 @@ export default async function CommandDeck() {
 
   return (
     <div className="min-h-screen bg-[#050508] flex items-start justify-center p-4 sm:p-6 lg:p-8">
-      <div className="deck-frame w-full max-w-[1100px] bg-[#0a0c12] mt-4 sm:mt-8">
+      <div className="w-full max-w-[1100px] mt-4 sm:mt-8">
+
+        {/* ── Top Nav ── */}
+        <nav className="flex items-center justify-between mb-3 px-1">
+          <p className="font-mono text-[10px] text-[#444] uppercase tracking-widest">
+            baised.dev
+          </p>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/analytics"
+              className="font-mono text-xs font-bold text-[#0052FF] border border-[#0052FF]/40 px-2.5 py-1 hover:bg-[#0052FF]/10 transition-colors tracking-wider uppercase"
+            >
+              ANALYTICS
+            </Link>
+            <Link
+              href="/dashboard"
+              className="font-mono text-xs text-[#787878] hover:text-[#ededed] transition-colors uppercase tracking-wider"
+            >
+              DASHBOARD
+            </Link>
+            <Link
+              href="/agents"
+              className="font-mono text-xs text-[#787878] hover:text-[#ededed] transition-colors uppercase tracking-wider"
+            >
+              AGENTS
+            </Link>
+          </div>
+        </nav>
+
+        <div className="deck-frame w-full bg-[#0a0c12]">
         {/* Main Grid: 2/3 left + 1/3 right */}
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr]">
           {/* ═══ LEFT COLUMN ═══ */}
@@ -652,6 +681,7 @@ export default async function CommandDeck() {
               </div>
             )}
           </aside>
+        </div>
         </div>
       </div>
     </div>

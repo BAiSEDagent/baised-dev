@@ -64,6 +64,73 @@ export async function fetchDexMarketShare(): Promise<MarketShareRow[] | null> {
   return fetchDuneQuery<MarketShareRow>(6767643);
 }
 
+export interface CrossChainDexRow {
+  day: string;
+  blockchain: string;
+  volume_usd: number;
+}
+
+export interface CrossChainDexData {
+  base: CrossChainDexRow[];
+  ethereum: CrossChainDexRow[];
+  arbitrum: CrossChainDexRow[];
+  optimism: CrossChainDexRow[];
+}
+
+export async function fetchCrossChainDex(): Promise<CrossChainDexData | null> {
+  try {
+    const signal = AbortSignal.timeout(10_000);
+    const res = await fetch(
+      `${BASE_URL}/6767495/results?limit=500`,
+      {
+        headers: { "X-DUNE-API-KEY": DUNE_API_KEY },
+        signal,
+        next: { revalidate: 3600 },
+      }
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    const rows: CrossChainDexRow[] = json?.result?.rows ?? [];
+
+    const grouped: CrossChainDexData = { base: [], ethereum: [], arbitrum: [], optimism: [] };
+    for (const row of rows) {
+      const chain = row.blockchain?.toLowerCase();
+      if (chain === "base") grouped.base.push(row);
+      else if (chain === "ethereum") grouped.ethereum.push(row);
+      else if (chain === "arbitrum") grouped.arbitrum.push(row);
+      else if (chain === "optimism") grouped.optimism.push(row);
+    }
+    return grouped;
+  } catch {
+    return null;
+  }
+}
+
+export interface ContractDeploymentRow {
+  day: string;
+  contracts_deployed: number;
+  unique_deployers: number;
+}
+
+export async function fetchContractDeployments(): Promise<ContractDeploymentRow[] | null> {
+  try {
+    const signal = AbortSignal.timeout(10_000);
+    const res = await fetch(
+      `${BASE_URL}/6767494/results?limit=200`,
+      {
+        headers: { "X-DUNE-API-KEY": DUNE_API_KEY },
+        signal,
+        next: { revalidate: 3600 },
+      }
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.result?.rows ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function formatCompact(
   n: number | null | undefined,
   prefix = ""
