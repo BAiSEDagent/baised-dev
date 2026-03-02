@@ -1,21 +1,21 @@
 import {
-  fetchAgentLeaderboard,
-  fetchAgenticPulse,
-  fetchERC8004Registrations,
   fetchVirtualDexActivity,
-  formatCompact,
+  fetchClankerLeaderboard,
+  fetchClankerDailyByPlatform,
+  fetchVirtualsMonthly,
+  fetchAgenticKPIs,
+  type ClankerLeaderboardRow,
 } from "@/lib/dune";
-import { AgenticPulseChart } from "@/components/agentic-pulse-chart";
 import { VirtualsDexChart } from "@/components/virtuals-chart";
-import { ERC8004Chart } from "@/components/erc8004-chart";
+import { VirtualsArcChart } from "@/components/virtuals-arc-chart";
 import Link from "next/link";
 
 export const revalidate = 3600;
 
 export const metadata = {
-  title: "Base Agent Activity — BAiSED",
+  title: "Base Agentic Economy — BAiSED",
   description:
-    "Onchain telemetry for the Base agentic ecosystem: ERC-8004 agent identity, Virtuals Protocol, AIXBT, and emerging agent commerce. Live Dune Analytics data.",
+    "Protocol-level telemetry for the Base agentic ecosystem: Clanker token factory, Virtuals Protocol agents, and the platform layer driving onchain AI commerce.",
 };
 
 function StatCard({
@@ -52,51 +52,64 @@ function SectionDivider({ label }: { label: string }) {
   );
 }
 
-function CategoryBadge({ category }: { category: string }) {
-  const isInfra = category === "Infrastructure";
-  const isConsumer = category === "Consumer";
-  const color = isInfra ? "#0052FF" : isConsumer ? "#FF007A" : "#787878";
-  const bg = isInfra
-    ? "rgba(0,82,255,0.1)"
-    : isConsumer
-    ? "rgba(255,0,122,0.1)"
-    : "rgba(120,120,120,0.1)";
+function SocialBadge({ platform }: { platform: string }) {
+  const upper = (platform ?? "").toUpperCase();
   return (
-    <span
-      className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 uppercase"
-      style={{ color, background: bg }}
-    >
-      {category}
+    <span className="font-mono text-[10px] border border-[#1a2a3a] px-1 text-[#787878] uppercase tracking-wider">
+      {upper || "—"}
     </span>
   );
 }
 
-export default async function AgentActivityPage() {
-  const [leaderboard, pulse, erc8004, virtualDex] = await Promise.all([
-    fetchAgentLeaderboard(),
-    fetchAgenticPulse(),
-    fetchERC8004Registrations(),
+/** Consolidate duplicate platform rows by summing numeric fields */
+function consolidateLeaderboard(rows: ClankerLeaderboardRow[]): ClankerLeaderboardRow[] {
+  const map = new Map<string, ClankerLeaderboardRow>();
+  for (const row of rows) {
+    const key = row.platform?.toLowerCase().trim() ?? "unknown";
+    if (map.has(key)) {
+      const existing = map.get(key)!;
+      map.set(key, {
+        ...existing,
+        tokens_deployed_30d: Number(existing.tokens_deployed_30d) + Number(row.tokens_deployed_30d),
+        unique_deployers_30d: Number(existing.unique_deployers_30d) + Number(row.unique_deployers_30d),
+        tokens_7d: Number(existing.tokens_7d) + Number(row.tokens_7d),
+        // average the WoW pct across duplicates
+        wow_growth_pct: (Number(existing.wow_growth_pct) + Number(row.wow_growth_pct)) / 2,
+      });
+    } else {
+      map.set(key, {
+        ...row,
+        tokens_deployed_30d: Number(row.tokens_deployed_30d),
+        unique_deployers_30d: Number(row.unique_deployers_30d),
+        tokens_7d: Number(row.tokens_7d),
+        wow_growth_pct: Number(row.wow_growth_pct),
+      });
+    }
+  }
+  return Array.from(map.values()).sort(
+    (a, b) => b.tokens_deployed_30d - a.tokens_deployed_30d
+  );
+}
+
+/** Format large numbers as "543K", "882K", "1.1M" */
+function fmtK(n: number | null | undefined): string {
+  if (n == null) return "—";
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
+  return n.toLocaleString();
+}
+
+export default async function DashboardPage() {
+  const [kpis, leaderboardRaw, , virtualsDex, virtualDex] = await Promise.all([
+    fetchAgenticKPIs(),
+    fetchClankerLeaderboard(),
+    fetchClankerDailyByPlatform(),
+    fetchVirtualsMonthly(),
     fetchVirtualDexActivity(),
   ]);
 
   const updatedAt = new Date().toUTCString();
-
-  // Derive KPIs — use Number() to guard against Dune returning numeric fields as strings
-  const totalTxs30d = leaderboard?.reduce((sum, r) => sum + Number(r.dex_trades_30d ?? 0), 0) ?? 0;
-  const totalUsers30d = leaderboard?.reduce((sum, r) => sum + Number(r.unique_traders_30d ?? 0), 0) ?? 0;
-  const virtualTotalVol =
-    virtualDex && virtualDex.length > 0
-      ? virtualDex.slice(-30).reduce((sum, r) => sum + Number(r.volume_usd ?? 0), 0)
-      : null;
-  const cumulativeAgents =
-    erc8004 && erc8004.length > 0
-      ? (Number(erc8004[erc8004.length - 1].cumulative_agents) || null)
-      : null;
-
-  // Sort leaderboard by activity_score DESC
-  const sortedLeaderboard = leaderboard
-    ? [...leaderboard].sort((a, b) => Number(b.activity_score ?? 0) - Number(a.activity_score ?? 0))
-    : [];
+  const leaderboard = leaderboardRaw ? consolidateLeaderboard(leaderboardRaw) : [];
 
   return (
     <div className="min-h-screen bg-[#050508] p-4 sm:p-6 lg:p-8">
@@ -105,7 +118,7 @@ export default async function AgentActivityPage() {
         {/* Nav */}
         <nav className="flex items-center justify-between mb-6">
           <h1 className="font-mono text-sm font-bold text-[#ededed] tracking-wide">
-            BASE_AGENT_ACTIVITY
+            BASE_AGENTIC_ECONOMY
           </h1>
           <Link
             href="/"
@@ -120,104 +133,57 @@ export default async function AgentActivityPage() {
           Updated: {updatedAt}
         </p>
 
-        {/* ── AGENTIC KPI ROW ── */}
+        {/* ── KPI ROW ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           <StatCard
-            label="ERC-8004 Agents"
-            value={cumulativeAgents != null ? cumulativeAgents.toLocaleString() : "—"}
-            sub="Registered agent identities"
+            label="CLANKER TOKENS (30D)"
+            value={fmtK(kpis?.clanker_tokens_30d)}
+            sub="Token deployments"
           />
           <StatCard
-            label="DEX Trades (30d)"
-            value={formatCompact(totalTxs30d || null)}
-            sub="Tracked agent tokens"
+            label="UNIQUE DEPLOYERS (30D)"
+            value={fmtK(kpis?.clanker_deployers_30d)}
+            sub="Distinct wallets"
           />
           <StatCard
-            label="Unique Traders (30d)"
-            value={formatCompact(totalUsers30d || null)}
-            sub="Cross-token"
+            label="TOTAL TOKENS EVER"
+            value={fmtK(kpis?.total_clanker)}
+            sub="All-time on Clanker v4"
           />
           <StatCard
-            label="VIRTUAL Vol (30d)"
-            value={formatCompact(virtualTotalVol, "$")}
-            sub="DEX volume"
+            label="VIRTUALS AGENTS"
+            value={kpis?.total_virtuals != null ? String(kpis.total_virtuals) : "—"}
+            sub="AI agents launched"
           />
         </div>
 
-        {/* ── AGENTIC_DEX_ACTIVITY ── */}
-        <SectionDivider label="AGENTIC_DEX_ACTIVITY" />
+        {/* ── CLANKER PLATFORM LEADERBOARD ── */}
+        <SectionDivider label="CLANKER_DEPLOYERS_30D" />
 
         <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
           <h2 className="font-mono text-xs font-bold text-[#ededed] tracking-wider mb-1 uppercase">
-            DAILY_AGENTIC_DEX_TRADES_90D
+            CLANKER_DEPLOYERS_30D
           </h2>
           <p className="font-mono text-[10px] text-[#787878] mb-4">
-            Daily DEX trades and 7-day moving average across tracked agent tokens
+            Which interfaces are driving the Base token economy
           </p>
-          {pulse && pulse.length > 0 ? (
-            <AgenticPulseChart data={pulse} />
-          ) : (
-            <p className="font-mono text-sm text-[#787878] py-8 text-center">
-              Data unavailable
-            </p>
-          )}
-          <div className="flex items-center gap-4 mt-3 flex-wrap">
-            {[
-              { label: "DAILY TRADES", color: "#0052FF" },
-              { label: "7D MA", color: "#FF007A", dashed: true },
-              { label: "CUMULATIVE", color: "#0052FF", faded: true },
-            ].map((c) => (
-              <div key={c.label} className="flex items-center gap-1.5">
-                <div
-                  className="w-4 h-px"
-                  style={{
-                    background: c.color,
-                    opacity: c.faded ? 0.3 : 1,
-                    borderTop: c.dashed ? `1px dashed ${c.color}` : `1px solid ${c.color}`,
-                  }}
-                />
-                <span
-                  className="font-mono text-[9px] tracking-widest"
-                  style={{ color: c.color, opacity: c.faded ? 0.5 : 1 }}
-                >
-                  {c.label}
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="font-mono text-[10px] text-[#444] mt-2">
-            Tracks DEX swap activity for 6 agent tokens: Virtuals (VIRTUAL), AIXBT, Venice (VVV), Clanker (CLANK), Ribbita (TIBBIR), VADER · base.dex.trades
-          </p>
-        </div>
 
-        {/* ── AGENT_TOKEN_DEX_LEADERBOARD ── */}
-        <SectionDivider label="AGENT_TOKEN_DEX_LEADERBOARD_30D" />
-
-        <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
-          <h2 className="font-mono text-xs font-bold text-[#ededed] tracking-wider mb-1 uppercase">
-            AGENT_TOKEN_DEX_LEADERBOARD_30D
-          </h2>
-          <p className="font-mono text-[10px] text-[#787878] mb-4">
-            Ranked by DEX trading activity (55% trades + 45% unique traders). Measures token market activity, not protocol interactions.
-          </p>
-          {sortedLeaderboard.length > 0 ? (
+          {leaderboard.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full font-mono text-xs">
                 <thead>
                   <tr className="text-[#787878] text-left">
                     <th className="pb-2 pr-2 font-medium tracking-wider w-6">#</th>
-                    <th className="pb-2 pr-3 font-medium tracking-wider">PROJECT</th>
-                    <th className="pb-2 pr-3 font-medium tracking-wider">CATEGORY</th>
-                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">DEX TRADES 30D</th>
-                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">TRADERS 30D</th>
-                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">VOL 30D</th>
-                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">WoW VOL %</th>
-                    <th className="pb-2 font-medium tracking-wider">ACTIVITY SCORE</th>
+                    <th className="pb-2 pr-3 font-medium tracking-wider">PLATFORM</th>
+                    <th className="pb-2 pr-3 font-medium tracking-wider">SOCIAL</th>
+                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">TOKENS 30D</th>
+                    <th className="pb-2 pr-3 font-medium text-right tracking-wider">DEPLOYERS 30D</th>
+                    <th className="pb-2 font-medium text-right tracking-wider">WoW %</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedLeaderboard.map((row, idx) => {
-                    const wow = Number(row.wow_vol_pct ?? 0);
+                  {leaderboard.map((row, idx) => {
+                    const wow = Number(row.wow_growth_pct ?? 0);
                     const wowDisplay =
                       wow === 0 ? "—" : `${wow > 0 ? "+" : ""}${wow.toFixed(1)}%`;
                     const wowColor =
@@ -226,40 +192,23 @@ export default async function AgentActivityPage() {
                         : wow < 0
                         ? "text-[#FF3B30]"
                         : "text-[#787878]";
-                    const score = Math.min(Math.max(Number(row.activity_score ?? 0), 0), 100);
                     return (
-                      <tr key={row.project} className="border-t border-[#1a1f2e]/50">
+                      <tr key={row.platform} className="border-t border-[#1a1f2e]/50">
                         <td className="py-2 pr-2 text-[#444] tabular-nums">{idx + 1}</td>
                         <td className="py-2 pr-3 text-[#ededed] uppercase tracking-wider">
-                          {row.project}
+                          {row.platform}
                         </td>
                         <td className="py-2 pr-3">
-                          <CategoryBadge category={row.category} />
+                          <SocialBadge platform={row.social_platform} />
                         </td>
                         <td className="py-2 pr-3 text-[#ededed] text-right tabular-nums">
-                          {formatCompact(Number(row.dex_trades_30d ?? 0) || null)}
+                          {Number(row.tokens_deployed_30d).toLocaleString()}
                         </td>
                         <td className="py-2 pr-3 text-[#ededed] text-right tabular-nums">
-                          {formatCompact(Number(row.unique_traders_30d ?? 0) || null)}
+                          {Number(row.unique_deployers_30d).toLocaleString()}
                         </td>
-                        <td className="py-2 pr-3 text-[#ededed] text-right tabular-nums">
-                          {formatCompact(Number(row.volume_30d_usd ?? 0) || null, "$")}
-                        </td>
-                        <td className={`py-2 pr-3 text-right tabular-nums ${wowColor}`}>
+                        <td className={`py-2 text-right tabular-nums ${wowColor}`}>
                           {wowDisplay}
-                        </td>
-                        <td className="py-2">
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 bg-[#1a2a3a] h-1.5">
-                              <div
-                                className="h-1.5 bg-[#0052FF]"
-                                style={{ width: `${score}%` }}
-                              />
-                            </div>
-                            <span className="text-[#0052FF] tabular-nums">
-                              {score.toFixed(0)}
-                            </span>
-                          </div>
                         </td>
                       </tr>
                     );
@@ -273,61 +222,63 @@ export default async function AgentActivityPage() {
             </p>
           )}
           <p className="font-mono text-[10px] text-[#444] mt-3">
-            Source: Dune Analytics · Sorted by activity score · Updated hourly
+            Source: Dune Analytics · clanker_v4_base.* · Duplicate platforms consolidated
           </p>
         </div>
 
-        {/* ── ERC-8004_REGISTRY ── */}
-        <SectionDivider label="ERC-8004_REGISTRY" />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-          {/* Left: Daily registrations chart */}
-          <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5">
-            <h2 className="font-mono text-xs font-bold text-[#ededed] tracking-wider mb-1 uppercase">
-              NEW_REGISTRATIONS_DAILY
-            </h2>
-            <p className="font-mono text-[10px] text-[#787878] mb-4">
-              New ERC-8004 agent identities registered per day on Base
-            </p>
-            {erc8004 && erc8004.length > 0 ? (
-              <ERC8004Chart data={erc8004} />
-            ) : (
-              <p className="font-mono text-sm text-[#787878] py-8 text-center">
-                Data unavailable
-              </p>
-            )}
-            <p className="font-mono text-[10px] text-[#444] mt-2">
-              Source: Dune Analytics · base.contracts · ERC-8004 onchain agent identity
-            </p>
-          </div>
-
-          {/* Right: Cumulative KPI */}
-          <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 flex flex-col">
-            <p className="font-mono text-[10px] text-[#787878] uppercase tracking-wider">
-              CUMULATIVE_ERC-8004_AGENTS
-            </p>
-            <div className="flex-1 flex flex-col justify-center py-8">
-              <p className="font-mono text-5xl sm:text-6xl text-[#0052FF] font-bold tabular-nums">
-                {cumulativeAgents != null ? cumulativeAgents.toLocaleString() : "—"}
-              </p>
-              <p className="font-mono text-[10px] text-[#787878] mt-3">
-                Total registered agent identities on Base mainnet
-              </p>
-            </div>
-            <div className="border-t border-[#1a2a3a] pt-3 mt-auto">
-              <p className="font-mono text-[10px] text-[#444]">
-                ERC-8004 · Onchain agent identity standard · Agentic citizenship layer
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── VIRTUALS_DEEPDIVE ── */}
-        <SectionDivider label="VIRTUALS_DEEPDIVE" />
+        {/* ── VIRTUALS AGENT ARC ── */}
+        <SectionDivider label="VIRTUALS_AGENT_ARC" />
 
         <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
           <h2 className="font-mono text-xs font-bold text-[#ededed] tracking-wider mb-1 uppercase">
-            VIRTUAL_TOKEN_DEX_ACTIVITY_90D
+            VIRTUALS_AGENT_LAUNCHES_ALL_TIME
+          </h2>
+          <p className="font-mono text-[10px] text-[#787878] mb-4">
+            924 AI agents deployed Sep 2024 — present. Peak: Oct 2024 (180/month)
+          </p>
+          {virtualsDex && virtualsDex.length > 0 ? (
+            <VirtualsArcChart data={virtualsDex} />
+          ) : (
+            <p className="font-mono text-sm text-[#787878] py-8 text-center">
+              Data unavailable
+            </p>
+          )}
+          <div className="flex items-center gap-4 mt-3 flex-wrap">
+            {[
+              { label: "NEW AGENTS / MONTH", color: "#0052FF", bar: true },
+              { label: "CUMULATIVE", color: "#FF007A", dashed: true },
+            ].map((c) => (
+              <div key={c.label} className="flex items-center gap-1.5">
+                {c.bar ? (
+                  <div className="w-3 h-3" style={{ background: c.color, opacity: 0.85 }} />
+                ) : (
+                  <div
+                    className="w-4 h-px"
+                    style={{
+                      borderTop: `2px dashed ${c.color}`,
+                    }}
+                  />
+                )}
+                <span
+                  className="font-mono text-[9px] tracking-widest"
+                  style={{ color: c.color }}
+                >
+                  {c.label}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="font-mono text-[10px] text-[#444] mt-2">
+            Source: Dune Analytics · virtuals_base.* Spellbook · Protocol factory events, not DEX trades
+          </p>
+        </div>
+
+        {/* ── VIRTUAL TOKEN DEX ── */}
+        <SectionDivider label="VIRTUAL_TOKEN_TRADING_ACTIVITY_90D" />
+
+        <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
+          <h2 className="font-mono text-xs font-bold text-[#ededed] tracking-wider mb-1 uppercase">
+            VIRTUAL_TOKEN_TRADING_ACTIVITY_90D
           </h2>
           <p className="font-mono text-[10px] text-[#787878] mb-4">
             DEX volume (bars, left) and unique traders (line, right) for VIRTUAL token on Base
@@ -345,8 +296,14 @@ export default async function AgentActivityPage() {
               { label: "UNIQUE TRADERS", color: "#FF007A" },
             ].map((c) => (
               <div key={c.label} className="flex items-center gap-1.5">
-                <div className="w-3 h-px" style={{ background: c.color, border: `1px solid ${c.color}` }} />
-                <span className="font-mono text-[9px] tracking-widest" style={{ color: c.color }}>
+                <div
+                  className="w-3 h-px"
+                  style={{ background: c.color, border: `1px solid ${c.color}` }}
+                />
+                <span
+                  className="font-mono text-[9px] tracking-widest"
+                  style={{ color: c.color }}
+                >
                   {c.label}
                 </span>
               </div>
@@ -357,85 +314,32 @@ export default async function AgentActivityPage() {
           </p>
         </div>
 
-        {/* ── WHAT_WE_TRACK ── */}
+        {/* ── WHAT WE TRACK ── */}
         <SectionDivider label="WHAT_WE_TRACK" />
 
         <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
           <div className="space-y-3 font-mono text-xs leading-relaxed max-w-2xl">
             <p className="text-[#ededed]">
-              BASE_AGENT_ACTIVITY tracks the emergence of onchain agentic commerce on Base.
+              BASE_AGENT_ECONOMY — two distinct layers
             </p>
             <p className="text-[#787878]">
-              <span className="text-[#ededed]">IDENTITY:</span>{" "}
-              ERC-8004 agent registrations — how fast is agentic citizenship growing?
+              <span className="text-[#ededed]">CLANKER:</span>{" "}
+              Token deployment infrastructure. 882K+ tokens created. Bankr, Clank.fun,
+              clanker.world, and SDK interfaces compete to deploy tokens on Base. This is the
+              high-frequency pulse of Base consumer crypto.
             </p>
             <p className="text-[#787878]">
-              <span className="text-[#ededed]">INFRASTRUCTURE:</span>{" "}
-              DEX activity around agent-adjacent tokens — where does capital flow first?
+              <span className="text-[#ededed]">VIRTUALS:</span>{" "}
+              AI agent protocol. 924 agents with full DAO+token economies. Peaked in
+              late 2024. Infrastructure for serious autonomous agents (AIXBT, Venice, etc.)
+              operating with real capital and users.
             </p>
             <p className="text-[#787878]">
-              <span className="text-[#ededed]">ADOPTION:</span>{" "}
-              Unique users, cross-project overlap, week-over-week momentum
+              <span className="text-[#ededed]">WHAT WE TRACK:</span>{" "}
+              Protocol factory events (token deployments, agent launches) via
+              Dune Analytics decoded Spellbook tables — not DEX trades. Factory events = real
+              protocol usage. Source: clanker_v4_base.* + virtuals_base.* Spellbook tables.
             </p>
-            <p className="text-[#787878]">
-              <span className="text-[#ededed]">COMMERCE:</span>{" "}
-              x402 agent-to-agent payments (tracking begins when volume becomes measurable)
-            </p>
-            <div className="pt-2 border-t border-[#1a2a3a]">
-              <p className="text-[#787878]">
-                Projects tracked:{" "}
-                <span className="text-[#ededed]">Virtuals Protocol</span>
-                {" · "}
-                <span className="text-[#ededed]">AIXBT</span>
-                {" · "}
-                <span className="text-[#ededed]">VADER</span>
-              </p>
-              <p className="text-[#444] mt-1">
-                More projects added as contract addresses are verified.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── DATA_NOTES ── */}
-        <SectionDivider label="DATA_NOTES" />
-
-        <div className="border border-[#1a2a3a] bg-[#0a0c12] p-5 mb-6">
-          <div className="space-y-3 font-mono text-xs leading-relaxed max-w-2xl">
-            <p className="text-[#787878]">
-              This dashboard measures{" "}
-              <span className="text-[#ededed]">DEX token trading activity</span>{" "}
-              as a proxy for ecosystem engagement.
-            </p>
-            <p className="text-[#787878]">
-              It does <span className="text-[#ededed]">NOT</span> yet measure protocol-level contract
-              interactions{" "}
-              <span className="text-[#444]">(coming soon)</span>.
-            </p>
-            <div className="pt-1">
-              <p className="text-[#787878]">
-                <span className="text-[#ededed]">Tracked tokens:</span>{" "}
-                VIRTUAL · AIXBT · VVV · CLANK · TIBBIR · VADER
-              </p>
-              <p className="text-[#787878] mt-1">
-                <span className="text-[#ededed]">Missing:</span>{" "}
-                Bankr (no token), CLAWD, AWE, FAI, Spectral (addresses unverified)
-              </p>
-              <p className="text-[#787878] mt-1">
-                <span className="text-[#ededed]">ERC-8004:</span>{" "}
-                Registry query pending — contract address verification in progress
-              </p>
-            </div>
-            <div className="pt-2 border-t border-[#1a2a3a] space-y-1">
-              <p className="text-[#444]">
-                For protocol-level metrics see:{" "}
-                <span className="text-[#787878]">dune.com/ax1research/base-agentic-ecosystem</span>
-              </p>
-              <p className="text-[#444]">
-                For agent mindshare:{" "}
-                <span className="text-[#787878]">agents.cookie.fun</span>
-              </p>
-            </div>
           </div>
         </div>
 
@@ -453,35 +357,37 @@ export default async function AgentActivityPage() {
             <div className="px-4 pb-4 border-t border-[#1a2a3a] pt-4 space-y-3">
               <div>
                 <p className="font-mono text-[10px] text-[#0052FF] uppercase tracking-widest mb-1">
-                  ERC-8004 REGISTRATIONS
+                  CLANKER FACTORY EVENTS
                 </p>
                 <p className="font-mono text-[11px] text-[#787878] leading-relaxed">
-                  Agent identity registrations sourced from{" "}
-                  <code className="text-[#ededed]">base.contracts</code> filtered
-                  by ERC-8004 interface signature. Each registration represents one
-                  unique onchain agent identity claimed on Base mainnet.
+                  Token deployments sourced from{" "}
+                  <code className="text-[#ededed]">clanker_v4_base.*</code> Spellbook tables.
+                  Each row represents one token contract deployed via a Clanker interface.
+                  Platform attribution derived from the calling contract address.
+                  Duplicate platform entries are consolidated by summing deployment counts.
                 </p>
               </div>
               <div>
                 <p className="font-mono text-[10px] text-[#FF007A] uppercase tracking-widest mb-1">
-                  VIRTUALS PROTOCOL DEX ACTIVITY
+                  VIRTUALS PROTOCOL AGENTS
+                </p>
+                <p className="font-mono text-[11px] text-[#787878] leading-relaxed">
+                  Agent launches sourced from{" "}
+                  <code className="text-[#ededed]">virtuals_base.*</code> Spellbook tables.
+                  Each agent represents a full protocol deployment: DAO, token economy, and
+                  staking infrastructure. Monthly cadence tracks the arc from launch surge
+                  to current steady state.
+                </p>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] text-[#00C853] uppercase tracking-widest mb-1">
+                  VIRTUAL TOKEN DEX ACTIVITY
                 </p>
                 <p className="font-mono text-[11px] text-[#787878] leading-relaxed">
                   VIRTUAL token DEX trades sourced from{" "}
                   <code className="text-[#ededed]">dex.trades</code> Spellbook.
                   Volume in USD. Unique traders counted per day as distinct wallet
                   addresses executing a swap involving the VIRTUAL token contract.
-                </p>
-              </div>
-              <div>
-                <p className="font-mono text-[10px] text-[#00C853] uppercase tracking-widest mb-1">
-                  PROJECT LEADERBOARD
-                </p>
-                <p className="font-mono text-[11px] text-[#787878] leading-relaxed">
-                  Activity scores are composite metrics (0–100) computed from
-                  transaction volume, user growth, and week-over-week momentum.
-                  Projects are manually curated and verified against known contract
-                  addresses before inclusion.
                 </p>
               </div>
               <div>
@@ -497,6 +403,7 @@ export default async function AgentActivityPage() {
               <div className="pt-2 border-t border-[#1a2a3a]">
                 <p className="font-mono text-[10px] text-[#444]">
                   Data sourced from public blockchain records via Dune Analytics SQL ·
+                  clanker_v4_base.* + virtuals_base.* + dex.trades ·
                   No financial advice · Numbers may lag by up to 2 hours
                 </p>
               </div>
@@ -507,7 +414,7 @@ export default async function AgentActivityPage() {
         {/* Footer */}
         <footer className="mt-2 text-center pb-4">
           <p className="font-mono text-[10px] text-[#444]">
-            Source: Dune Analytics SQL · base.contracts + dex.trades ·
+            Source: Dune Analytics SQL · clanker_v4_base.* + virtuals_base.* + dex.trades ·
             Updated hourly · No financial advice
           </p>
         </footer>

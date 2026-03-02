@@ -194,3 +194,53 @@ export async function fetchAgentLeaderboard(): Promise<AgentLeaderboardRow[] | n
 export async function fetchAgenticPulse(): Promise<AgenticPulseRow[] | null> {
   return fetchDuneQuery<AgenticPulseRow>(6768008);
 }
+
+// ── Clanker + Virtuals Protocol Queries ─────────────────────────────────────
+
+export interface ClankerLeaderboardRow {
+  platform: string;
+  social_platform: string;
+  tokens_deployed_30d: number;
+  unique_deployers_30d: number;
+  tokens_7d: number;
+  wow_growth_pct: number;
+}
+
+export interface ClankerDailyRow {
+  day: string;
+  platform: string;
+  tokens_deployed: number;
+  unique_deployers: number;
+}
+
+export interface VirtualsMonthlyRow {
+  month: string;
+  new_agents: number;
+  cumulative_agents: number;
+}
+
+export interface AgenticKPIs {
+  clanker_tokens_30d: number;
+  clanker_deployers_30d: number;
+  clanker_tokens_7d: number;
+  virtuals_agents_30d: number;
+  total_clanker: number;
+  total_virtuals: number;
+}
+
+export async function fetchClankerLeaderboard(): Promise<ClankerLeaderboardRow[] | null> {
+  return fetchDuneQuery<ClankerLeaderboardRow>(6768049);
+}
+
+export async function fetchClankerDailyByPlatform(): Promise<ClankerDailyRow[] | null> {
+  return fetchDuneQuery<ClankerDailyRow>(6768048);
+}
+
+export async function fetchVirtualsMonthly(): Promise<VirtualsMonthlyRow[] | null> {
+  return fetchDuneQuery<VirtualsMonthlyRow>(6768055);
+}
+
+export async function fetchAgenticKPIs(): Promise<AgenticKPIs | null> {
+  const rows = await fetchDuneQuery<AgenticKPIs>(6768056);
+  return rows?.[0] ?? null;
+}
