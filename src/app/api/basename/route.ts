@@ -1,11 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAddress, namehash } from 'viem';
+import { createPublicClient, http, isAddress, namehash } from 'viem';
+import { base } from 'viem/chains';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 
-export const runtime = 'edge';
+// Node.js runtime — viem readContract needs full Node.js env
+// Edge runtime breaks viem's HTTP transport silently
 
-const L2_RESOLVER = '0xC6d566A56A1aFf6508b41f6c90ff131615583BCD';
-const BASE_RPC = 'https://mainnet.base.org';
+const L2_RESOLVER = '0xC6d566A56A1aFf6508b41f6c90ff131615583BCD' as const;
+
+const ADDR_ABI = [{
+  inputs: [{ name: 'node', type: 'bytes32' }],
+  name: 'addr',
+  outputs: [{ name: '', type: 'address' }],
+  stateMutability: 'view',
+  type: 'function',
+}] as const;
+
+// Create client per-request to avoid cold start issues
+function getClient() {
+  return createPublicClient({
+    chain: base,
+    transport: http('https://mainnet.base.org', { timeout: 8000 }),
+  });
+}
 
 function sanitizeInput(input: string): string {
   return input.replace(/[\x00-\x1F\x7F]/g, '').trim();
@@ -13,40 +30,6 @@ function sanitizeInput(input: string): string {
 
 function validateBasename(name: string): boolean {
   return /^[a-z0-9-]{3,63}$/.test(name);
-}
-
-// Forward resolution: name → address via direct RPC call
-async function resolveBasename(name: string): Promise<string | null> {
-  try {
-    const node = namehash(name);
-    
-    // Call resolver.addr(node) — function selector 0x3b3b57de
-    const data = '0x3b3b57de' + node.slice(2).padStart(64, '0');
-    
-    const response = await fetch(BASE_RPC, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'eth_call',
-        params: [{
-          to: L2_RESOLVER,
-          data,
-        }, 'latest'],
-        id: 1,
-      }),
-    });
-    
-    const result = await response.json();
-    if (result.result && result.result !== '0x' && result.result.length >= 66) {
-      const address = '0x' + result.result.slice(-40);
-      return address !== '0x0000000000000000000000000000000000000000' ? address : null;
-    }
-    return null;
-  } catch (err) {
-    console.error('[basename] resolve error:', err);
-    return null;
-  }
 }
 
 export async function GET(req: NextRequest) {
@@ -83,13 +66,22 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      const resolvedAddress = await resolveBasename(fullName);
-      
+      const client = getClient();
+      const node = namehash(fullName);
+
+      const resolvedAddress = await client.readContract({
+        address: L2_RESOLVER,
+        abi: ADDR_ABI,
+        functionName: 'addr',
+        args: [node],
+      });
+
+      const result = resolvedAddress && resolvedAddress !== '0x0000000000000000000000000000000000000000'
+        ? resolvedAddress
+        : null;
+
       return NextResponse.json(
-        {
-          result: resolvedAddress || 'Not found',
-          input: fullName,
-        },
+        { result: result || 'Not found', input: fullName },
         {
           headers: {
             'X-RateLimit-Remaining': String(rateLimitResult.remaining),
@@ -107,9 +99,8 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      // Reverse resolution: not implemented (requires different contract call)
       return NextResponse.json(
-        { result: 'No basename registered', input: sanitized },
+        { result: 'Reverse resolution coming soon', input: sanitized },
         {
           headers: {
             'X-RateLimit-Remaining': String(rateLimitResult.remaining),
