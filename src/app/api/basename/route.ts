@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { baseClient } from '@/lib/viem-client';
-import { normalize } from 'viem/ens';
+
 import { isAddress, namehash } from 'viem';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 
@@ -83,8 +83,8 @@ export async function GET(req: NextRequest) {
       }
 
       // Resolve directly on Base L2 via resolver contract
-      const normalized = normalize(fullName);
-      const node = namehash(normalized);
+      
+      const node = namehash(fullName);
 
       const resolvedAddress = await baseClient.readContract({
         address: L2_RESOLVER,
