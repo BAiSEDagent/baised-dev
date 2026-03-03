@@ -12,14 +12,18 @@
   },
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.44.1",
+    "@coinbase/onchainkit": "^1.1.2",
+    "@farcaster/miniapp-sdk": "^0.2.3",
     "@prisma/client": "^5.22.0",
     "@stackblitz/sdk": "^1.11.0",
+    "@tanstack/react-query": "^5.90.21",
     "next": "14.2.35",
     "prisma": "^5.22.0",
     "react": "^18",
     "react-dom": "^18",
     "recharts": "^3.7.0",
-    "viem": "^2.46.3"
+    "viem": "^2.46.3",
+    "wagmi": "^3.5.0"
   },
   "devDependencies": {
     "@types/node": "^20",
