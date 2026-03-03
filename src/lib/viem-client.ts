@@ -1,12 +1,10 @@
 /**
- * Viem public clients for Base mainnet and Ethereum L1
- * baseClient: gas estimation, contract reads on Base
- * mainnetClient: ENS/Basename resolution (CCIP-Read requires L1)
+ * Viem public client for Base mainnet
+ * Used for Basename resolution (L2 resolver), gas estimation, contract reads
  */
 import { createPublicClient, http } from 'viem';
-import { base, mainnet } from 'viem/chains';
+import { base } from 'viem/chains';
 
-// C-3: Validate CDP_API_KEY environment variable at runtime
 const CDP_API_KEY = process.env.CDP_API_KEY || '';
 
 if (typeof window === 'undefined' && !CDP_API_KEY && process.env.NODE_ENV !== 'test') {
@@ -23,13 +21,4 @@ export const baseClient = createPublicClient({
       timeout: 5000,
     }
   ),
-});
-
-// L1 client for ENS resolution — Basenames use CCIP-Read via L1 Universal Resolver
-// Must be Ethereum mainnet (not Base) — ENS contracts live on L1
-export const mainnetClient = createPublicClient({
-  chain: mainnet,
-  transport: http('https://eth.llamarpc.com', {
-    timeout: 10000, // ENS CCIP-Read can be slow
-  }),
 });
