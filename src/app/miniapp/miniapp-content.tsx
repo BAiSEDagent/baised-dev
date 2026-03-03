@@ -244,7 +244,7 @@ function GasTool() {
     try {
       const res = await fetch('/api/gas');
       const data = await res.json();
-      setGas(data.formatted || data.gasPrice || 'Unavailable');
+      setGas(data.gasPriceGwei != null ? String(data.gasPriceGwei.toFixed(6)) : data.formatted || data.gasPrice || 'Unavailable');
     } catch {
       setGas('Error');
     } finally {

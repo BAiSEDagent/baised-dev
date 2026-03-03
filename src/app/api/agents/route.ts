@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export async function OPTIONS() {
   return NextResponse.json({}, {
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': 'https://baised.dev',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Max-Age': '86400',
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ count: agents.length, agents }, {
       headers: {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://baised.dev',
       },
     });
   } catch {
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       { message: 'Agent submitted for review', id: agent.id },
       {
         status: 201,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: { 'Access-Control-Allow-Origin': 'https://baised.dev' },
       }
     );
   } catch {

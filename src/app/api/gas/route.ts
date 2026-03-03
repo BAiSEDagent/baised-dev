@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { baseClient } from '@/lib/viem-client';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 
-export const runtime = 'edge';
+// Node.js runtime — viem HTTP transport fails on edge
 export const revalidate = 120; // L-2: Cache for 2 minutes (Base gas changes quickly)
 
 export async function GET(req: NextRequest) {

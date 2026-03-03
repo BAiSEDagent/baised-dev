@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 
 export const revalidate = 300; // 5 min cache
 
@@ -7,7 +8,13 @@ export const revalidate = 300; // 5 min cache
  * No auth required. Machine-readable JSON for agents and builders.
  * Data sourced from DeFiLlama + status.base.org (free, no API key).
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const identifier = getRateLimitIdentifier(req);
+  const rateLimitResult = checkRateLimit(identifier);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+
   const [chains, dex, fees, block, status] = await Promise.allSettled([
     fetch('https://api.llama.fi/v2/chains').then((r) => r.json()),
     fetch('https://api.llama.fi/overview/dexs/Base').then((r) => r.json()),

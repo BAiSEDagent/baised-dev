@@ -11,8 +11,8 @@ export async function GET() {
       version: '1',
       name: 'BAiSED',
       homeUrl: `${URL}/miniapp`,
-      iconUrl: `${URL}/icon.png`,
-      splashImageUrl: `${URL}/icon.png`,
+      iconUrl: `${URL}/opengraph-image`,
+      splashImageUrl: `${URL}/opengraph-image`,
       splashBackgroundColor: '#080a10',
       subtitle: 'Base Developer Tools',
       description:
@@ -20,12 +20,12 @@ export async function GET() {
       screenshotUrls: [],
       primaryCategory: 'developer-tools',
       tags: ['base', 'developer', 'faucet', 'tools', 'devrel'],
-      heroImageUrl: `${URL}/og`,
+      heroImageUrl: `${URL}/opengraph-image`,
       tagline: 'Dev tools in your wallet',
       ogTitle: 'BAiSED — Base Developer Tools',
       ogDescription:
         'Faucet, basename resolver, gas tracker, and ABI decoder. No tab switching.',
-      ogImageUrl: `${URL}/og`,
+      ogImageUrl: `${URL}/opengraph-image`,
       noindex: false,
     },
   });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 import { fetchPulseCounters, fetchDexCounters, fetchDexMarketShare } from "@/lib/dune";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +8,11 @@ const PAYTO = "0x7458B08E13bBC390cD2CF6a8cE8980e4954E13b8";
 const PRICE = "$0.01";
 
 export async function GET(req: NextRequest) {
+  const identifier = getRateLimitIdentifier(req);
+  const rateLimitResult = checkRateLimit(identifier);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+  }
   // Check for x402 payment header
   const paymentHeader =
     req.headers.get("x-payment") || req.headers.get("payment");

@@ -30,7 +30,7 @@ function getClientIp(): string {
 function corsHeaders(method: 'GET' | 'POST'): Record<string, string> {
   if (method === 'GET') {
     return {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': 'https://baised.dev',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     };
@@ -44,7 +44,7 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': 'https://baised.dev',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400',
