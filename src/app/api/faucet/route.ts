@@ -28,10 +28,18 @@ export async function POST(req: NextRequest) {
 
   if (!apiKeyId || !apiKeySecret) {
     return NextResponse.json(
-      { error: 'Faucet not configured', debug: { hasId: !!apiKeyId, hasSecret: !!apiKeySecret } },
+      { error: 'Faucet not configured' },
       { status: 503 }
     );
   }
+
+  // Debug: check if credentials have expected format
+  const debugInfo = {
+    idLength: apiKeyId.length,
+    idPrefix: apiKeyId.substring(0, 8),
+    secretLength: apiKeySecret.length,
+    secretPrefix: apiKeySecret.substring(0, 4),
+  };
 
   try {
     const body = await req.json();
@@ -44,7 +52,10 @@ export async function POST(req: NextRequest) {
     const selectedToken = ['eth', 'usdc'].includes(token) ? token : 'eth';
 
     const { CdpClient } = await import('@coinbase/cdp-sdk');
-    const cdp = new CdpClient({ apiKeyId, apiKeySecret });
+    const cdp = new CdpClient({ 
+      apiKeyId: apiKeyId.trim(),
+      apiKeySecret: apiKeySecret.trim(),
+    });
 
     const result = await cdp.evm.requestFaucet({
       address: address as `0x${string}`,
@@ -62,7 +73,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[faucet] error:', message);
-    return NextResponse.json({ error: 'Faucet request failed', detail: message }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Faucet request failed', 
+      detail: message,
+      debug: debugInfo,
+    }, { status: 500 });
   }
 }
