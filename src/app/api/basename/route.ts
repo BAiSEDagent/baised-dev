@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { baseClient } from '@/lib/viem-client';
+import { mainnetClient } from '@/lib/viem-client';
 import { normalize } from 'viem/ens';
 import { isAddress } from 'viem';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
 
       // Resolve using ENS (H-1: timeout already in viem-client.ts)
       const normalized = normalize(fullName);
-      const resolvedAddress = await baseClient.getEnsAddress({
+      const resolvedAddress = await mainnetClient.getEnsAddress({
         name: normalized,
       });
 
@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      const ensName = await baseClient.getEnsName({
+      const ensName = await mainnetClient.getEnsName({
         address: sanitized as `0x${string}`,
       });
 
