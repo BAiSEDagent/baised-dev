@@ -38,6 +38,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  other: {
+    "base:app_id": "69a66c70a0fdf68983d30811",
+  },
   alternates: {
     types: {
       'application/rss+xml': 'https://baised.dev/feed.xml',
