@@ -93,7 +93,8 @@ body {
 
 /* Interactive Workbench Module */
 .workbench-module {
-  padding: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
   border: 1px solid #1a2a3a;
   background: linear-gradient(180deg, #0a0c12 0%, #080a0f 100%);
   transition: border-color 0.2s, box-shadow 0.2s;

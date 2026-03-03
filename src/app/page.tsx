@@ -136,7 +136,7 @@ export default async function CommandDeck() {
         {/* Main Grid: 2/3 left + 1/3 right */}
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr]">
           {/* ═══ LEFT COLUMN ═══ */}
-          <div className="p-5 sm:p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-[#1a2a3a]">
+          <div className="p-6 sm:p-8 lg:p-10 border-b lg:border-b-0 lg:border-r border-[#1a2a3a]">
             {/* SYSTEM_STATUS Header */}
             <header className="pb-6 border-b border-[#1a1f2e]">
               <div className="flex items-start gap-4 sm:gap-5">
@@ -222,7 +222,7 @@ export default async function CommandDeck() {
               ) : (
                 <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
                   {feed.map((item) => (
-                    <article key={item.id} className="py-2.5">
+                    <article key={item.id} className="py-3.5">
                       <p className="font-mono text-xs sm:text-sm leading-relaxed">
                         <span
                           className={`font-bold ${categoryClass(item.category)}`}
@@ -250,7 +250,7 @@ export default async function CommandDeck() {
             </section>
 
             {/* ═══ SHIPPED ═══ */}
-            <section className="mt-6 pt-6 border-t border-[#1a1f2e]" aria-label="Shipped Projects">
+            <section className="mt-10 pt-8 border-t border-[#1a1f2e]" aria-label="Shipped Projects">
               <h2 className="font-mono text-sm font-bold text-[#ededed] tracking-wide mb-4">
                 SHIPPED <span className="text-[#3b4a6b] font-normal">{"// portfolio"}</span>
               </h2>
@@ -298,7 +298,7 @@ export default async function CommandDeck() {
             {/* ═══ BASE PROTOCOL ACTIVITY ═══ */}
             {changelog.length > 0 && (
               <section
-                className="mt-6 pt-6 border-t border-[#1a1f2e]"
+                className="mt-10 pt-8 border-t border-[#1a1f2e]"
                 aria-label="Base Protocol Activity"
               >
                 <h2 className="font-mono text-sm font-bold text-[#ededed] tracking-wide mb-4">
@@ -386,7 +386,7 @@ export default async function CommandDeck() {
             )}
 
             {/* ═══ INTERACTIVE WORKBENCH ═══ */}
-            <section className="mt-6 pt-6 border-t border-[#1a1f2e]">
+            <section className="mt-10 pt-8 border-t border-[#1a1f2e]">
               <h2 className="font-mono text-sm font-bold text-[#ededed] tracking-wide mb-3">
                 INTERACTIVE_WORKBENCH
               </h2>
@@ -456,7 +456,7 @@ export default async function CommandDeck() {
           </div>
 
           {/* ═══ RIGHT COLUMN — BUILDER_TOOLKIT ═══ */}
-          <aside className="p-5 sm:p-6 lg:p-8">
+          <aside className="p-6 sm:p-8 lg:p-10">
             <h2 className="font-mono text-sm font-bold text-[#ededed] tracking-wide mb-5">
               BUILDER_TOOLKIT
             </h2>
@@ -486,7 +486,7 @@ export default async function CommandDeck() {
 
             {/* Base Engineering Blog */}
             {blogPosts.length > 0 && (
-              <div className="mt-6 pt-5 border-t border-[#1a1f2e]">
+              <div className="mt-8 pt-6 border-t border-[#1a1f2e]">
                 <h3 className="font-mono text-xs font-bold text-[#787878] tracking-wide mb-3">
                   BASE_ENGINEERING
                 </h3>
@@ -525,7 +525,7 @@ export default async function CommandDeck() {
             )}
 
             {/* Grants */}
-            <div className="mt-6 pt-5 border-t border-[#1a1f2e]">
+            <div className="mt-8 pt-6 border-t border-[#1a1f2e]">
               <h3 className="font-mono text-xs font-bold text-[#787878] tracking-wide mb-3">
                 GRANTS_&amp;_FUNDING
               </h3>
@@ -571,7 +571,7 @@ export default async function CommandDeck() {
             </div>
 
             {/* Ecosystem links */}
-            <div className="mt-6 pt-5 border-t border-[#1a1f2e]">
+            <div className="mt-8 pt-6 border-t border-[#1a1f2e]">
               <h3 className="font-mono text-xs font-bold text-[#787878] tracking-wide mb-3">
                 ECOSYSTEM
               </h3>
