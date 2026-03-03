@@ -10,6 +10,7 @@ import { GasEstimator } from "@/components/gas-estimator";
 import { FaucetModule } from "@/components/faucet-module";
 import { AbiDecoder } from "@/components/abi-decoder";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { IntelFeed } from "@/components/intel-feed";
 import { prisma } from "@/lib/db";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,27 +43,7 @@ function formatBlock(block: number | string): string {
   return String(block);
 }
 
-function categoryTag(category: string): string {
-  return category.toUpperCase();
-}
 
-function categoryClass(category: string): string {
-  switch (category) {
-    case "security":
-    case "alert":
-      return "tag-security";
-    case "devlog":
-    case "tech":
-      return "tag-devlog";
-    case "ecosystem":
-    case "grant":
-      return "tag-ecosystem";
-    case "feature":
-      return "tag-feature";
-    default:
-      return "tag-general";
-  }
-}
 
 // ── Builder Toolkit: curated Base-native resources ──
 const BUILDER_TOOLKIT = [
@@ -210,43 +191,7 @@ export default async function CommandDeck() {
                 ECOSYSTEM_INTEL_FEED
               </h2>
 
-              {feed.length === 0 ? (
-                <div className="py-12 text-center">
-                  <p className="font-mono text-sm text-[#787878]">
-                    No intel published yet.
-                  </p>
-                  <p className="font-mono text-xs text-[#444] mt-1">
-                    Signal incoming. Check back soon.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
-                  {feed.map((item) => (
-                    <article key={item.id} className="py-3.5">
-                      <p className="font-mono text-xs sm:text-sm leading-relaxed">
-                        <span
-                          className={`font-bold ${categoryClass(item.category)}`}
-                        >
-                          [{categoryTag(item.category)}]
-                        </span>
-                        {" "}
-                        <span className="text-[#c8c8c8]">
-                          {item.intelPayload.title ||
-                            item.intelPayload.body ||
-                            "—"}
-                        </span>
-                      </p>
-                      {item.intelPayload.body && item.intelPayload.title && (
-                        <p className="font-mono text-xs text-[#787878] mt-0.5 ml-0">
-                          {item.intelPayload.body.length > 120
-                            ? item.intelPayload.body.slice(0, 120) + "…"
-                            : item.intelPayload.body}
-                        </p>
-                      )}
-                    </article>
-                  ))}
-                </div>
-              )}
+              <IntelFeed feed={feed} />
             </section>
 
             {/* ═══ SHIPPED ═══ */}
